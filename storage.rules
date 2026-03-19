@@ -1,11 +1,10 @@
+// Storage kullanılmıyor (free plan).
+// Bu dosya sadece referans için bırakıldı.
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
-    // users/{uid}/ altına sadece o kullanıcı yazabilir/okuyabilir
-    match /users/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == userId;
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }
