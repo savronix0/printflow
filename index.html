@@ -1,392 +1,462 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="theme-color" content="#0a0b0e"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="PrintFlow"/>
-<title>PrintFlow — 3D Yazıcı Takip</title>
-<link rel="manifest" href="manifest.json"/>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
-<style>
-:root{--bg:#0a0b0e;--bg2:#10121a;--bg3:#161924;--bg4:#1e2230;--bg5:#252a3a;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);--border3:rgba(255,255,255,0.18);--text:#e8eaf0;--text2:#b0b5c8;--muted:#6b7090;--accent:#ff6b35;--accent-d:#e05520;--accent-bg:rgba(255,107,53,0.10);--accent-br:rgba(255,107,53,0.25);--blue:#4a9eff;--blue-bg:rgba(74,158,255,0.10);--green:#2ecc8a;--green-bg:rgba(46,204,138,0.10);--green-br:rgba(46,204,138,0.25);--purple:#a78bfa;--purple-bg:rgba(167,139,250,0.10);--red:#ff4757;--red-bg:rgba(255,71,87,0.10);--red-br:rgba(255,71,87,0.25);--amber:#ffaa00;--font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;--r:10px;--r-sm:6px;--r-lg:14px;--r-xl:20px;--sidebar-w:240px}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font);display:flex;min-height:100vh;-webkit-font-smoothing:antialiased}
-button{cursor:pointer;border:none;background:none;font:inherit}input,select,textarea{font:inherit}table{border-collapse:collapse;width:100%}textarea{resize:vertical}
-.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:200;transition:transform .15s;overflow-y:auto}
-.sidebar-logo{padding:26px 20px 18px;border-bottom:1px solid var(--border)}
-.logo-mark{font-size:22px;font-weight:800;letter-spacing:-.5px;color:#fff}.logo-mark span{color:var(--accent)}
-.logo-sub{font-size:10px;font-family:var(--mono);color:var(--muted);margin-top:3px;letter-spacing:1.5px;text-transform:uppercase}
-.sidebar-nav{flex:1;padding:10px;display:flex;flex-direction:column;gap:2px}
-.nav-label{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:10px 10px 3px;display:block}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);font-size:14px;font-weight:600;color:var(--muted);border:1px solid transparent;transition:all .15s;cursor:pointer;user-select:none}
-.nav-item:hover{background:var(--bg3);color:var(--text)}.nav-item.active{background:var(--accent-bg);color:var(--accent);border-color:var(--accent-br)}
-.nav-icon{width:18px;height:18px;flex-shrink:0}
-.sidebar-footer{padding:14px;border-top:1px solid var(--border)}
-.printer-live{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:12px 14px}
-.pl-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
-.pl-name{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
-.pl-meta{font-size:11px;font-family:var(--mono);color:var(--muted)}
-.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--muted)}
-.status-dot.printing{background:var(--accent);box-shadow:0 0 6px var(--accent);animation:blink 1.8s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:150;backdrop-filter:blur(2px)}
-.main-content{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
-.topbar{position:sticky;top:0;z-index:100;background:var(--bg2);border-bottom:1px solid var(--border);padding:13px 28px;display:flex;align-items:center;gap:14px}
-.topbar-title{font-size:17px;font-weight:700;flex:1}
-.topbar-actions{display:flex;align-items:center;gap:8px}
-.burger-btn{display:none;flex-direction:column;gap:5px;width:32px;padding:4px;flex-shrink:0}
-.burger-btn span{display:block;height:2px;background:var(--text);border-radius:2px}
-.page-container{flex:1;padding:26px 28px}.page{display:none}.page.active{display:block}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;line-height:1}
-.btn:hover{background:var(--bg4)}.btn:active{transform:scale(.98)}
-.btn-accent{background:var(--accent);border-color:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-d)}
-.btn-ghost{background:transparent;border-color:transparent;color:var(--muted)}.btn-ghost:hover{background:var(--bg3);color:var(--text)}
-.btn-danger{background:var(--red-bg);border-color:var(--red-br);color:var(--red)}
-.btn-success{background:var(--green-bg);border-color:var(--green-br);color:var(--green)}
-.btn-sm{padding:6px 11px;font-size:12px}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px}.card:hover{border-color:var(--border2)}
-.card-header{font-size:14px;font-weight:700;margin-bottom:18px}
-.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
-.section-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
-.badge-count{font-size:11px;font-family:var(--mono);background:var(--bg4);color:var(--muted);padding:2px 7px;border-radius:var(--r-sm)}
-.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;overflow-x:auto}
-.data-table thead th{padding:10px 15px;text-align:left;font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--bg3);border-bottom:1px solid var(--border);white-space:nowrap}
-.data-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s;cursor:pointer}.data-table tbody tr:last-child{border-bottom:none}.data-table tbody tr:hover{background:var(--bg3)}
-.data-table td{padding:12px 15px;font-size:13px;vertical-align:middle;white-space:nowrap}
-.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 7px;border-radius:var(--r-sm);font-size:11px;font-weight:700;font-family:var(--mono)}
-.badge-done{background:var(--green-bg);color:var(--green)}.badge-printing{background:var(--accent-bg);color:var(--accent)}.badge-failed{background:var(--red-bg);color:var(--red)}
-.type-tag{display:inline-block;padding:2px 6px;border-radius:var(--r-sm);font-size:11px;font-family:var(--mono);font-weight:700;background:var(--bg4);color:var(--muted)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-overlay.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-xl);width:540px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,.6);animation:mIn .18s ease}
-@keyframes mIn{from{opacity:0;transform:scale(.97) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 16px;border-bottom:1px solid var(--border)}
-.modal-title{font-size:17px;font-weight:700}
-.modal-close{width:30px;height:30px;border-radius:var(--r-sm);background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.modal-body{padding:18px 22px}.modal-footer{display:flex;gap:8px;justify-content:flex-end;padding:14px 22px;border-top:1px solid var(--border)}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form-group{display:flex;flex-direction:column;gap:5px}.form-group.full{grid-column:1/-1}
-label{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-input[type=text],input[type=number],select,textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:14px;padding:9px 12px;outline:none;transition:border-color .15s;width:100%}
-input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,107,53,.12)}
-input::placeholder,textarea::placeholder{color:var(--muted)}
-select option{background:var(--bg3);color:var(--text)}textarea{min-height:76px}
-input[type=color]{padding:3px;height:38px;cursor:pointer;border-radius:var(--r)}
-.select-sm{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);font-family:var(--font);font-size:13px;padding:7px 11px;outline:none;cursor:pointer}
-.color-swatch-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:5px}
-.color-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s}.color-swatch:hover{transform:scale(1.15)}.color-swatch.selected{border-color:#fff;transform:scale(1.1)}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.stat-card.orange::before{background:var(--accent)}.stat-card.blue::before{background:var(--blue)}.stat-card.green::before{background:var(--green)}.stat-card.purple::before{background:var(--purple)}
-.stat-label{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
-.stat-value{font-size:28px;font-weight:800;line-height:1;margin-bottom:5px}
-.stat-card.orange .stat-value{color:var(--accent)}.stat-card.blue .stat-value{color:var(--blue)}.stat-card.green .stat-value{color:var(--green)}.stat-card.purple .stat-value{color:var(--purple)}
-.stat-hint{font-size:12px;color:var(--muted)}
-.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}.chart-wrap{position:relative;height:190px}
-.active-banner{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,rgba(255,107,53,.1),rgba(255,159,28,.05));border:1px solid var(--accent-br);border-radius:var(--r-lg);padding:16px 20px;margin-bottom:22px;flex-wrap:wrap}
-.ab-icon{font-size:24px;flex-shrink:0}.ab-info{flex:1;min-width:120px}.ab-title{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:2px}.ab-sub{font-size:12px;color:var(--muted)}
-.ab-timer{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--accent);flex-shrink:0}.ab-actions{display:flex;gap:7px}
-.filament-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.filament-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;transition:border-color .15s}.filament-card:hover{border-color:var(--border2)}
-.fc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px}
-.fc-brand{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:2px}.fc-name{font-size:15px;font-weight:700}
-.fc-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
-.fc-dot{width:32px;height:32px;border-radius:50%;border:3px solid rgba(255,255,255,.12);flex-shrink:0}
-.progress-wrap{margin:9px 0 5px}.progress-labels{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:5px}
-.progress-bar{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}.progress-fill{height:100%;border-radius:3px;transition:width .4s}
-.fc-meta{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
-.fc-meta-item .lbl{font-size:10px;font-family:var(--mono);color:var(--muted);display:block}.fc-meta-item .val{font-size:13px;font-weight:600}
-.printer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:18px}
-.printer-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;transition:border-color .15s}.printer-card:hover{border-color:var(--border2)}.printer-card.is-active{border-color:var(--accent-br)}
-.pc-header{display:flex;align-items:center;gap:11px;margin-bottom:16px}
-.pc-icon{width:40px;height:40px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
-.pc-name{font-size:15px;font-weight:700}.pc-model{font-size:12px;color:var(--muted)}
-.pc-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.pc-stat{background:var(--bg3);border-radius:var(--r);padding:10px 12px}
-.pc-stat-label{font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:3px}.pc-stat-value{font-size:15px;font-weight:700;font-family:var(--mono)}
-.calc-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}.calc-form{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.cost-result{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-top:14px}
-.cost-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid var(--border)}.cost-row:last-child{border-bottom:none}
-.cost-row.total{font-size:15px;font-weight:700;color:var(--accent);padding-top:12px;margin-top:3px;border-top:1px solid var(--border2)}
-.cost-label{color:var(--muted)}.cost-value{font-family:var(--mono)}.divider{height:1px;background:var(--border);margin:16px 0}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
-.detail-cell{background:var(--bg3);border-radius:var(--r);padding:11px 13px}
-.detail-cell .lbl{font-size:10px;font-family:var(--mono);color:var(--muted);display:block;margin-bottom:3px}.detail-cell .val{font-size:15px;font-weight:700}
-.notes-box{background:var(--bg3);border-radius:var(--r);padding:13px;font-size:13px;line-height:1.6;color:var(--text2);min-height:50px}
-.empty-state{text-align:center;padding:50px 20px;color:var(--muted);grid-column:1/-1}.empty-icon{font-size:40px;margin-bottom:10px}.empty-title{font-size:15px;font-weight:700;color:var(--text2);margin-bottom:5px}
-.login-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
-.login-card{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:44px 40px;width:100%;max-width:390px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.5);animation:mIn .3s ease}
-.login-logo{font-size:30px;font-weight:800;letter-spacing:-1px;color:#fff;margin-bottom:5px}.login-logo span{color:var(--accent)}
-.login-sub{font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:.5px;text-transform:uppercase}
-.login-divider{height:1px;background:var(--border);margin:24px 0}
-.login-desc{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:24px}
-.btn-google{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 18px;background:#fff;color:#3c4043;border:none;border-radius:var(--r);font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.btn-google:hover{background:#f8f8f8;transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.25)}.btn-google:disabled{opacity:.6;cursor:not-allowed;transform:none}
-.login-note{margin-top:18px;font-size:12px;color:var(--muted);line-height:1.5}
-.login-error{margin-top:11px;padding:9px 13px;background:var(--red-bg);border:1px solid var(--red-br);border-radius:var(--r);font-size:13px;color:var(--red)}
-.user-menu-wrap{position:relative}
-.user-avatar-btn{width:33px;height:33px;border-radius:50%;border:2px solid var(--border2);overflow:hidden;cursor:pointer;background:var(--bg3);transition:border-color .15s;display:flex;align-items:center;justify-content:center;padding:0}.user-avatar-btn:hover{border-color:var(--accent)}
-.user-avatar-img{width:100%;height:100%;object-fit:cover}.user-avatar-fallback{font-size:14px;font-weight:700;color:var(--accent)}
-.user-dropdown{position:absolute;top:calc(100% + 7px);right:0;width:210px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);box-shadow:0 12px 40px rgba(0,0,0,.6);opacity:0;pointer-events:none;transform:translateY(-5px);transition:opacity .15s,transform .15s;z-index:300;overflow:hidden}
-.user-dropdown.open{opacity:1;pointer-events:auto;transform:translateY(0)}
-.user-dropdown-header{padding:13px 15px}.udd-name{font-size:14px;font-weight:700;margin-bottom:2px}.udd-email{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.user-dropdown-divider{height:1px;background:var(--border)}
-.user-dropdown-item{display:flex;align-items:center;gap:7px;width:100%;padding:10px 15px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--red);cursor:pointer;transition:background .15s}.user-dropdown-item:hover{background:var(--red-bg)}
-.app-loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:8000;gap:14px}
-.app-loading-logo{font-size:26px;font-weight:800;color:#fff}.app-loading-logo span{color:var(--accent)}
-.spinner{width:30px;height:30px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.toast-container{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none}
-.toast{background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:11px 15px;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.5);animation:mIn .2s ease;pointer-events:auto;max-width:280px}
-.toast.success{border-left:3px solid var(--green)}.toast.error{border-left:3px solid var(--red)}.toast.info{border-left:3px solid var(--blue)}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px}
-@media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr)}.filament-grid{grid-template-columns:repeat(2,1fr)}.calc-layout{grid-template-columns:1fr}.charts-row{grid-template-columns:1fr}}
-@media(max-width:768px){:root{--sidebar-w:0px}.sidebar{transform:translateX(-240px);width:240px}.sidebar.open{transform:translateX(0);box-shadow:0 12px 40px rgba(0,0,0,.6)}.sidebar-overlay.open{display:block}.main-content{margin-left:0}.burger-btn{display:flex}.topbar{padding:12px 15px}.page-container{padding:15px}.stats-grid{grid-template-columns:1fr 1fr;gap:11px}.filament-grid{grid-template-columns:1fr}.printer-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.calc-form{grid-template-columns:1fr}}
-@media(max-width:480px){.stats-grid{grid-template-columns:1fr}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0b0e" />
+  <meta name="description" content="PrintFlow — 3D Yazıcı Üretim Takip Sistemi" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PrintFlow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="PrintFlow — 3D Yazıcı Takip" />
+  <meta property="og:description" content="Baskı süresi, filament kullanımı ve maliyet takibi" />
+  <meta property="og:type" content="website" />
+
+  <title>PrintFlow — 3D Yazıcı Takip</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
 </head>
 <body>
 
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-logo"><div class="logo-mark">Print<span>Flow</span></div><div class="logo-sub">3D Tracker v1.0</div></div>
-  <nav class="sidebar-nav" id="main-nav">
-    <span class="nav-label">Ana Menü</span>
-    <div class="nav-item active" data-page="dashboard"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg><span>Dashboard</span></div>
-    <div class="nav-item" data-page="prints"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 7h6M7 10h6M7 13h4" stroke-linecap="round"/></svg><span>Baskılar</span></div>
-    <span class="nav-label">Yönetim</span>
-    <div class="nav-item" data-page="filaments"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3"/></svg><span>Filament Stok</span></div>
-    <div class="nav-item" data-page="printers"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="14" height="9" rx="1.5"/><path d="M6 7V4h8v3" stroke-linecap="round"/><circle cx="14" cy="11.5" r="1" fill="currentColor"/></svg><span>Yazıcılar</span></div>
-    <span class="nav-label">Araçlar</span>
-    <div class="nav-item" data-page="cost"><svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3v14M6 6h6a2 2 0 010 4H8a2 2 0 000 4h7" stroke-linecap="round"/></svg><span>Maliyet</span></div>
-  </nav>
-  <div class="sidebar-footer"><div class="printer-live"><div class="pl-row"><span class="pl-name" id="sb-name">—</span><span class="status-dot" id="sb-dot"></span></div><div class="pl-meta" id="sb-meta">Boşta</div></div></div>
-</aside>
-<div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">Print<span>Flow</span></div>
+      <div class="logo-sub">3D Tracker v1.0</div>
+    </div>
 
-<main class="main-content" id="main-content">
-  <header class="topbar">
-    <button class="burger-btn" id="burger-btn"><span></span><span></span><span></span></button>
-    <h1 class="topbar-title" id="page-title">Dashboard</h1>
-    <div class="topbar-actions" id="topbar-actions"><button class="btn btn-accent" id="new-print-btn">＋ Yeni Baskı</button></div>
-  </header>
-  <div class="page-container">
-    <section class="page active" id="page-dashboard">
-      <div class="active-banner" id="active-banner" style="display:none"><div class="ab-icon">🖨️</div><div class="ab-info"><div class="ab-title" id="ab-model">Baskı devam ediyor</div><div class="ab-sub" id="ab-sub">—</div></div><div class="ab-timer" id="ab-timer">00:00:00</div><div class="ab-actions"><button class="btn btn-sm btn-success" id="btn-complete">✓ Tamamla</button><button class="btn btn-sm btn-danger" id="btn-fail">✕ Başarısız</button></div></div>
-      <div class="stats-grid">
-        <div class="stat-card orange"><div class="stat-label">Toplam Baskı</div><div class="stat-value" id="s-total">0</div><div class="stat-hint">tüm zamanlar</div></div>
-        <div class="stat-card blue"><div class="stat-label">Toplam Süre</div><div class="stat-value" id="s-hours">0s</div><div class="stat-hint">baskı saati</div></div>
-        <div class="stat-card green"><div class="stat-label">Filament</div><div class="stat-value" id="s-grams">0g</div><div class="stat-hint">toplam kullanılan</div></div>
-        <div class="stat-card purple"><div class="stat-label">Toplam Maliyet</div><div class="stat-value" id="s-cost">₺0</div><div class="stat-hint">filament + elektrik</div></div>
+    <nav class="sidebar-nav" id="main-nav">
+      <span class="nav-section-label">Ana Menü</span>
+      <a class="nav-item active" data-page="dashboard" href="#dashboard">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item" data-page="prints" href="#prints">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span>Baskılar</span>
+      </a>
+
+      <span class="nav-section-label">Yönetim</span>
+      <a class="nav-item" data-page="filaments" href="#filaments">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>Filament Stok</span>
+      </a>
+      <a class="nav-item" data-page="printers" href="#printers">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M6 7V4h8v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="14" cy="11.5" r="1" fill="currentColor"/></svg>
+        <span>Yazıcılar</span>
+      </a>
+
+      <span class="nav-section-label">Araçlar</span>
+      <a class="nav-item" data-page="cost" href="#cost">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M6 6h6a2 2 0 010 4H8a2 2 0 000 4h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span>Maliyet</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="printer-live-card" id="sidebar-printer-card">
+        <div class="plc-header">
+          <span class="plc-name" id="sb-printer-name">—</span>
+          <span class="status-dot idle" id="sb-status-dot"></span>
+        </div>
+        <div class="plc-meta" id="sb-printer-meta">Boşta</div>
       </div>
-      <div class="charts-row"><div class="card"><div class="card-header">Aylık Baskı Sayısı</div><div class="chart-wrap"><canvas id="chart-monthly"></canvas></div></div><div class="card"><div class="card-header">Malzeme Dağılımı</div><div class="chart-wrap"><canvas id="chart-material"></canvas></div></div></div>
-      <div class="section-hdr"><h2 class="section-title">Son Baskılar</h2><button class="btn btn-sm btn-ghost" data-page="prints">Tümünü Gör →</button></div>
-      <div class="table-wrap"><table class="data-table"><thead><tr><th>Model</th><th>Yazıcı</th><th>Filament</th><th>Süre</th><th>Maliyet</th><th>Durum</th></tr></thead><tbody id="tbody-recent"></tbody></table></div>
-    </section>
-    <section class="page" id="page-prints">
-      <div class="section-hdr"><h2 class="section-title">Baskılar <span class="badge-count" id="prints-count">0</span></h2><div style="display:flex;gap:8px;flex-wrap:wrap"><select class="select-sm" id="filter-status"><option value="">Tüm Durumlar</option><option value="done">Tamamlanan</option><option value="printing">Devam Eden</option><option value="failed">Başarısız</option></select><button class="btn btn-accent btn-sm" id="prints-add-btn">＋ Yeni Baskı</button></div></div>
-      <div class="table-wrap"><table class="data-table"><thead><tr><th>Model</th><th>Yazıcı</th><th>Gram</th><th>Malzeme</th><th>Süre</th><th>Maliyet</th><th>Durum</th><th></th></tr></thead><tbody id="tbody-prints"></tbody></table></div>
-    </section>
-    <section class="page" id="page-filaments"><div class="section-hdr"><h2 class="section-title">Filament Stok</h2><button class="btn btn-accent btn-sm" id="filament-add-btn">＋ Makara Ekle</button></div><div class="filament-grid" id="filament-grid"></div></section>
-    <section class="page" id="page-printers"><div class="section-hdr"><h2 class="section-title">Yazıcılar</h2><button class="btn btn-accent btn-sm" id="printer-add-btn">＋ Yazıcı Ekle</button></div><div class="printer-grid" id="printer-grid"></div></section>
-    <section class="page" id="page-cost">
-      <div class="calc-layout">
-        <div class="card"><div class="card-header">Maliyet Hesaplayıcı</div><div class="calc-form"><div class="form-group"><label>Filament (gram)</label><input type="number" id="calc-grams" value="100"/></div><div class="form-group"><label>Filament (₺/kg)</label><input type="number" id="calc-price" value="450"/></div><div class="form-group"><label>Süre (saat)</label><input type="number" id="calc-hours" value="5" step="0.5"/></div><div class="form-group"><label>Güç (Watt)</label><input type="number" id="calc-watt" value="200"/></div><div class="form-group"><label>Elektrik (₺/kWh)</label><input type="number" id="calc-kwh" value="5.8" step="0.1"/></div><div class="form-group"><label>Kâr Marjı (%)</label><input type="number" id="calc-margin" value="30"/></div></div><div class="cost-result" id="cost-result"></div></div>
-        <div class="card"><div class="card-header">Bu Ayki Özet</div><div id="monthly-summary"></div><div class="divider"></div><div class="card-header" style="margin-bottom:10px">Filament Harcamaları</div><div id="filament-breakdown"></div></div>
+    </div>
+  </aside>
+
+  <!-- ── MOBILE OVERLAY ───────────────────────────────────── -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ── MAIN ────────────────────────────────────────────── -->
+  <main class="main-content" id="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="burger-btn" id="burger-btn" aria-label="Menü">
+        <span></span><span></span><span></span>
+      </button>
+      <h1 class="topbar-title" id="page-title">Dashboard</h1>
+      <div class="topbar-actions">
+        <button class="btn btn-accent" id="new-print-btn">
+          <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Yeni Baskı
+        </button>
       </div>
-    </section>
+    </header>
+
+    <!-- Page Container -->
+    <div class="page-container">
+
+      <!-- ── DASHBOARD ────────────────────────────────────── -->
+      <section class="page active" id="page-dashboard">
+
+        <!-- Active Print Banner -->
+        <div class="active-banner" id="active-banner" style="display:none">
+          <div class="ab-icon">🖨️</div>
+          <div class="ab-info">
+            <div class="ab-title" id="ab-model-name">Baskı devam ediyor</div>
+            <div class="ab-sub" id="ab-sub">—</div>
+          </div>
+          <div class="ab-timer" id="ab-timer">00:00:00</div>
+          <div class="ab-actions">
+            <button class="btn btn-sm btn-success" id="btn-complete">✓ Tamamla</button>
+            <button class="btn btn-sm btn-danger"  id="btn-fail">✕ Başarısız</button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card accent">
+            <div class="stat-label">Toplam Baskı</div>
+            <div class="stat-value" id="s-total">0</div>
+            <div class="stat-hint">tüm zamanlar</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-label">Toplam Süre</div>
+            <div class="stat-value" id="s-hours">0s</div>
+            <div class="stat-hint">baskı saati</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">Filament</div>
+            <div class="stat-value" id="s-grams">0g</div>
+            <div class="stat-hint">toplam kullanılan</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-label">Toplam Maliyet</div>
+            <div class="stat-value" id="s-cost">₺0</div>
+            <div class="stat-hint">filament + elektrik</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-row">
+          <div class="card">
+            <div class="card-header">Aylık Baskı Sayısı</div>
+            <div class="chart-wrap"><canvas id="chart-monthly"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header">Malzeme Dağılımı</div>
+            <div class="chart-wrap"><canvas id="chart-material"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Recent Prints -->
+        <div class="section-header">
+          <h2 class="section-title">Son Baskılar</h2>
+          <button class="btn btn-sm btn-ghost" data-page="prints">Tümünü Gör →</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="tbl-recent">
+            <thead>
+              <tr>
+                <th>Model</th><th>Yazıcı</th><th>Filament</th>
+                <th>Süre</th><th>Maliyet</th><th>Durum</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-recent"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── PRINTS ────────────────────────────────────────── -->
+      <section class="page" id="page-prints">
+        <div class="section-header">
+          <h2 class="section-title">Baskılar <span class="badge-count" id="prints-count">0</span></h2>
+          <div class="section-actions">
+            <select class="select-sm" id="filter-status">
+              <option value="">Tüm Durumlar</option>
+              <option value="done">Tamamlanan</option>
+              <option value="printing">Devam Eden</option>
+              <option value="failed">Başarısız</option>
+            </select>
+            <button class="btn btn-accent btn-sm" id="prints-add-btn">＋ Yeni Baskı</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Model</th><th>Yazıcı</th><th>Filament</th>
+                <th>Malzeme</th><th>Süre</th><th>Maliyet</th><th>Durum</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-prints"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── FILAMENTS ─────────────────────────────────────── -->
+      <section class="page" id="page-filaments">
+        <div class="section-header">
+          <h2 class="section-title">Filament Stok</h2>
+          <button class="btn btn-accent btn-sm" id="filament-add-btn">＋ Makara Ekle</button>
+        </div>
+        <div class="filament-grid" id="filament-grid"></div>
+      </section>
+
+      <!-- ── PRINTERS ──────────────────────────────────────── -->
+      <section class="page" id="page-printers">
+        <div class="section-header">
+          <h2 class="section-title">Yazıcılar</h2>
+          <button class="btn btn-accent btn-sm" id="printer-add-btn">＋ Yazıcı Ekle</button>
+        </div>
+        <div class="printer-grid" id="printer-grid"></div>
+      </section>
+
+      <!-- ── COST ──────────────────────────────────────────── -->
+      <section class="page" id="page-cost">
+        <div class="calc-layout">
+          <div class="card">
+            <div class="card-header">Maliyet Hesaplayıcı</div>
+            <div class="calc-form">
+              <div class="form-group">
+                <label for="calc-grams">Filament Kullanımı (gram)</label>
+                <input type="number" id="calc-grams" value="100" />
+              </div>
+              <div class="form-group">
+                <label for="calc-price">Filament Fiyatı (₺/kg)</label>
+                <input type="number" id="calc-price" value="450" />
+              </div>
+              <div class="form-group">
+                <label for="calc-hours">Baskı Süresi (saat)</label>
+                <input type="number" id="calc-hours" value="5" step="0.5" />
+              </div>
+              <div class="form-group">
+                <label for="calc-watt">Yazıcı Gücü (Watt)</label>
+                <input type="number" id="calc-watt" value="200" />
+              </div>
+              <div class="form-group">
+                <label for="calc-kwh">Elektrik (₺/kWh)</label>
+                <input type="number" id="calc-kwh" value="5.8" step="0.1" />
+              </div>
+              <div class="form-group">
+                <label for="calc-margin">Kâr Marjı (%)</label>
+                <input type="number" id="calc-margin" value="30" />
+              </div>
+            </div>
+            <div class="cost-result" id="cost-result"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">Bu Ayki Özet</div>
+            <div id="monthly-summary"></div>
+            <div class="divider"></div>
+            <div class="card-header" style="padding-top:0">Filament Harcamaları</div>
+            <div id="filament-breakdown"></div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /page-container -->
+  </main>
+
+  <!-- ══════════════ MODALS ══════════════ -->
+
+  <!-- New Print -->
+  <div class="modal-overlay" id="modal-print">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Yeni Baskı</h2>
+        <button class="modal-close" data-close="modal-print">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="p-name">Model Adı *</label>
+            <input type="text" id="p-name" placeholder="örn. Vase Mode, Benchy..." />
+          </div>
+          <div class="form-group">
+            <label for="p-printer">Yazıcı *</label>
+            <select id="p-printer"></select>
+          </div>
+          <div class="form-group">
+            <label for="p-filament">Filament Makarası</label>
+            <select id="p-filament"></select>
+          </div>
+          <div class="form-group">
+            <label for="p-grams">Filament (gram) *</label>
+            <input type="number" id="p-grams" placeholder="örn. 85" />
+          </div>
+          <div class="form-group">
+            <label for="p-duration">Tahmini Süre (dk)</label>
+            <input type="number" id="p-duration" placeholder="örn. 120" />
+          </div>
+          <div class="form-group">
+            <label for="p-layer">Katman Yüksekliği (mm)</label>
+            <input type="number" id="p-layer" placeholder="0.2" step="0.05" />
+          </div>
+          <div class="form-group">
+            <label for="p-infill">Doluluk (%)</label>
+            <input type="number" id="p-infill" placeholder="20" />
+          </div>
+          <div class="form-group full">
+            <label for="p-status">Durum</label>
+            <select id="p-status">
+              <option value="printing">Devam Ediyor</option>
+              <option value="done">Tamamlandı</option>
+              <option value="failed">Başarısız</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label for="p-notes">Notlar</label>
+            <textarea id="p-notes" placeholder="Baskı hakkında notlar..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close="modal-print">İptal</button>
+        <button class="btn btn-accent" id="btn-save-print">Kaydet</button>
+      </div>
+    </div>
   </div>
-</main>
 
-<!-- MODALS -->
-<div class="modal-overlay" id="modal-print"><div class="modal"><div class="modal-header"><h2 class="modal-title">Yeni Baskı</h2><button class="modal-close" data-close="modal-print">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group full"><label>Model Adı *</label><input type="text" id="p-name" placeholder="Benchy, Kasa Kapağı..."/></div><div class="form-group"><label>Yazıcı *</label><select id="p-printer"></select></div><div class="form-group"><label>Filament</label><select id="p-filament"></select></div><div class="form-group"><label>Filament (gram) *</label><input type="number" id="p-grams" placeholder="85"/></div><div class="form-group"><label>Süre (dk)</label><input type="number" id="p-duration" placeholder="120"/></div><div class="form-group"><label>Katman (mm)</label><input type="number" id="p-layer" placeholder="0.2" step="0.05"/></div><div class="form-group"><label>Doluluk (%)</label><input type="number" id="p-infill" placeholder="20"/></div><div class="form-group full"><label>Durum</label><select id="p-status"><option value="printing">Devam Ediyor</option><option value="done">Tamamlandı</option><option value="failed">Başarısız</option></select></div><div class="form-group full"><label>Notlar</label><textarea id="p-notes" placeholder="Notlar..."></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" data-close="modal-print">İptal</button><button class="btn btn-accent" id="btn-save-print">Kaydet</button></div></div></div>
-<div class="modal-overlay" id="modal-filament"><div class="modal"><div class="modal-header"><h2 class="modal-title">Makara Ekle</h2><button class="modal-close" data-close="modal-filament">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group"><label>Marka *</label><input type="text" id="f-brand" placeholder="eSun, Bambu..."/></div><div class="form-group"><label>Malzeme *</label><select id="f-type"><option>PLA</option><option>PLA+</option><option>PETG</option><option>ABS</option><option>ASA</option><option>TPU</option><option>Nylon</option><option>CF-PLA</option><option>Diğer</option></select></div><div class="form-group full"><label>Renk Adı *</label><input type="text" id="f-color-name" placeholder="Beyaz, Galaxy Black..."/></div><div class="form-group full"><label>Renk</label><div class="color-swatch-row" id="color-swatches"></div><input type="color" id="f-color" value="#ff6b35"/></div><div class="form-group"><label>Toplam (g)</label><input type="number" id="f-total" value="1000"/></div><div class="form-group"><label>Kalan (g)</label><input type="number" id="f-remaining" value="1000"/></div><div class="form-group"><label>Fiyat (₺/kg)</label><input type="number" id="f-price" value="450"/></div><div class="form-group"><label>Sıcaklık (°C)</label><input type="number" id="f-temp" value="210"/></div><div class="form-group full"><label>Notlar</label><textarea id="f-notes" style="min-height:60px"></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" data-close="modal-filament">İptal</button><button class="btn btn-accent" id="btn-save-filament">Kaydet</button></div></div></div>
-<div class="modal-overlay" id="modal-printer"><div class="modal"><div class="modal-header"><h2 class="modal-title">Yazıcı Ekle</h2><button class="modal-close" data-close="modal-printer">✕</button></div><div class="modal-body"><div class="form-grid"><div class="form-group full"><label>Yazıcı Adı *</label><input type="text" id="pr-name" placeholder="Ender 3 Pro"/></div><div class="form-group"><label>Marka</label><select id="pr-brand"><option>Creality</option><option>Bambu Lab</option><option>Prusa</option><option>Voron</option><option>Anycubic</option><option>Elegoo</option><option>Diğer</option></select></div><div class="form-group"><label>Güç (Watt)</label><input type="number" id="pr-watt" value="200"/></div><div class="form-group"><label>Build Hacmi</label><input type="text" id="pr-bed" placeholder="220x220x250"/></div><div class="form-group"><label>Satın Alma (₺)</label><input type="number" id="pr-price" placeholder="0"/></div><div class="form-group full"><label>Notlar</label><textarea id="pr-notes" style="min-height:60px"></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" data-close="modal-printer">İptal</button><button class="btn btn-accent" id="btn-save-printer">Kaydet</button></div></div></div>
-<div class="modal-overlay" id="modal-detail"><div class="modal"><div class="modal-header"><h2 class="modal-title" id="detail-title">Baskı Detayı</h2><button class="modal-close" data-close="modal-detail">✕</button></div><div class="modal-body" id="detail-body"></div></div></div>
-<div class="toast-container" id="toast-container"></div>
+  <!-- New Filament -->
+  <div class="modal-overlay" id="modal-filament">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Makara Ekle</h2>
+        <button class="modal-close" data-close="modal-filament">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="f-brand">Marka *</label>
+            <input type="text" id="f-brand" placeholder="eSun, Bambu, Polymaker..." />
+          </div>
+          <div class="form-group">
+            <label for="f-type">Malzeme *</label>
+            <select id="f-type">
+              <option>PLA</option><option>PLA+</option><option>PETG</option>
+              <option>ABS</option><option>ASA</option><option>TPU</option>
+              <option>Nylon</option><option>CF-PLA</option><option>Resin</option><option>Diğer</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label for="f-color-name">Renk Adı *</label>
+            <input type="text" id="f-color-name" placeholder="örn. Beyaz, Galaxy Black..." />
+          </div>
+          <div class="form-group full">
+            <label>Renk Seç</label>
+            <div class="color-swatch-row" id="color-swatches"></div>
+            <input type="color" id="f-color" value="#ff6b35" />
+          </div>
+          <div class="form-group">
+            <label for="f-total">Toplam Ağırlık (g)</label>
+            <input type="number" id="f-total" value="1000" />
+          </div>
+          <div class="form-group">
+            <label for="f-remaining">Kalan Ağırlık (g)</label>
+            <input type="number" id="f-remaining" value="1000" />
+          </div>
+          <div class="form-group">
+            <label for="f-price">Fiyat (₺/kg)</label>
+            <input type="number" id="f-price" value="450" />
+          </div>
+          <div class="form-group">
+            <label for="f-temp">Baskı Sıcaklığı (°C)</label>
+            <input type="number" id="f-temp" value="210" />
+          </div>
+          <div class="form-group full">
+            <label for="f-notes">Notlar</label>
+            <textarea id="f-notes" placeholder="Filament hakkında notlar..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close="modal-filament">İptal</button>
+        <button class="btn btn-accent" id="btn-save-filament">Kaydet</button>
+      </div>
+    </div>
+  </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script type="module">
-import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import{getAuth,GoogleAuthProvider,signInWithRedirect,getRedirectResult,signOut,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import{getFirestore,collection,doc,getDocs,addDoc,updateDoc,deleteDoc,onSnapshot,serverTimestamp,query,orderBy}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  <!-- New Printer -->
+  <div class="modal-overlay" id="modal-printer">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Yazıcı Ekle</h2>
+        <button class="modal-close" data-close="modal-printer">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="pr-name">Yazıcı Adı *</label>
+            <input type="text" id="pr-name" placeholder="örn. Ender 3 Pro" />
+          </div>
+          <div class="form-group">
+            <label for="pr-brand">Marka</label>
+            <select id="pr-brand">
+              <option>Creality</option><option>Bambu Lab</option><option>Prusa</option>
+              <option>Voron</option><option>Anycubic</option><option>Elegoo</option><option>Diğer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="pr-watt">Güç (Watt)</label>
+            <input type="number" id="pr-watt" value="200" />
+          </div>
+          <div class="form-group">
+            <label for="pr-bed">Build Hacmi (mm)</label>
+            <input type="text" id="pr-bed" placeholder="220x220x250" />
+          </div>
+          <div class="form-group">
+            <label for="pr-price">Satın Alma Fiyatı (₺)</label>
+            <input type="number" id="pr-price" placeholder="0" />
+          </div>
+          <div class="form-group full">
+            <label for="pr-notes">Notlar</label>
+            <textarea id="pr-notes" placeholder="Donanım, mod, bakım notları..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close="modal-printer">İptal</button>
+        <button class="btn btn-accent" id="btn-save-printer">Kaydet</button>
+      </div>
+    </div>
+  </div>
 
-// ══ FIREBASE CONFIG — KENDİ DEĞERLERİNLE DEĞİŞTİR ══
-const firebaseConfig = {
-  apiKey: "AIzaSyB1AxvgT5wT_FUK4Wr4MGsheSBStb88kbs",
-  authDomain: "printflow-511cf.firebaseapp.com",
-  projectId: "printflow-511cf",
-  storageBucket: "printflow-511cf.firebasestorage.app",
-  messagingSenderId: "928759906552",
-  appId: "1:928759906552:web:4307a41d3484c3a0cfbb0d"
-};
+  <!-- Print Detail -->
+  <div class="modal-overlay" id="modal-detail">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="detail-title">Baskı Detayı</h2>
+        <button class="modal-close" data-close="modal-detail">✕</button>
+      </div>
+      <div class="modal-body" id="detail-body"></div>
+    </div>
+  </div>
 
-const app=initializeApp(cfg);
-const auth=getAuth(app);
-const db=getFirestore(app);
-const prov=new GoogleAuthProvider();
-prov.setCustomParameters({prompt:'select_account'});
+  <!-- Toast -->
+  <div class="toast-container" id="toast-container"></div>
 
-// Firestore helpers
-const uCol=(c)=>collection(db,'users',auth.currentUser.uid,c);
-const uDoc=(c,id)=>doc(db,'users',auth.currentUser.uid,c,id);
-const fsAll=async(c)=>{const s=await getDocs(query(uCol(c),orderBy('createdAt','desc')));return s.docs.map(d=>({id:d.id,...d.data()}));};
-const fsAdd=async(c,d)=>(await addDoc(uCol(c),{...d,createdAt:serverTimestamp()})).id;
-const fsUpd=async(c,id,d)=>updateDoc(uDoc(c,id),{...d,updatedAt:serverTimestamp()});
-const fsDel=async(c,id)=>deleteDoc(uDoc(c,id));
-const fsLsn=(c,cb)=>onSnapshot(query(uCol(c),orderBy('createdAt','desc')),s=>cb(s.docs.map(d=>({id:d.id,...d.data()}))),e=>console.error(c,e));
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
-// Cache
-let P=[],F=[],PR=[],unsubs=[];
-const EL=5.8;
-const hy=p=>({...p,date:p.createdAt?.seconds?p.createdAt.seconds*1000:(p.date||Date.now())});
-const cost=(g,m,fid)=>{const f=F.find(x=>x.id===fid);return+((f?(g/1000)*f.price:0)+(m/60)*(200/1000)*EL).toFixed(2);};
-const pName=id=>P.find(p=>p.id===id)?.name||'—';
-const fName=id=>{const f=F.find(x=>x.id===id);return f?`${f.brand} ${f.colorName} (${f.type})`:'—';};
-const fCol=p=>p>50?'var(--green)':p>20?'var(--amber)':'var(--red)';
-const sBadge=s=>{const m={done:['badge-done','✓ Tamamlandı'],printing:['badge-printing','⬡ Devam'],failed:['badge-failed','✕ Başarısız']};const[c,l]=m[s]||['',''];return`<span class="badge ${c}">${l}</span>`;};
-const $=id=>document.getElementById(id);
-const fmtD=m=>{if(!m)return'—';const h=Math.floor(m/60),r=m%60;return h>0?`${h}s ${r}dk`:`${r}dk`;};
-const fmtC=v=>{const n=parseFloat(v)||0;return'₺'+(n%1===0?n.toFixed(0):n.toFixed(2));};
-const fmtDt=ts=>new Date(ts).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
-const fmtT=s=>[Math.floor(s/3600),Math.floor((s%3600)/60),s%60].map(x=>String(x).padStart(2,'0')).join(':');
-
-function toast(msg,type='info',dur=3000){const c=$('toast-container');const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;c.appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),320);},dur);}
-function openM(id){$(id).classList.add('open');document.body.style.overflow='hidden';}
-function closeM(id){$(id).classList.remove('open');document.body.style.overflow='';}
-window.closeModal=closeM;
-
-// Load + seed
-async function loadAll(){
-  const[p,f,pr]=await Promise.all([fsAll('printers'),fsAll('filaments'),fsAll('prints')]);
-  P=p;F=f;PR=pr.map(hy);
-}
-async function seed(){
-  if(P.length>0)return;
-  const pid=await fsAdd('printers',{name:'Ender 3 Pro',brand:'Creality',watt:200,bed:'220×220×250',price:4500,notes:'BLTouch takılı',totalPrints:0,totalFilament:0});
-  const f1=await fsAdd('filaments',{brand:'eSun',type:'PLA+',colorName:'Beyaz',color:'#f0f0ec',total:1000,remaining:740,price:420,temp:210,notes:''});
-  const f2=await fsAdd('filaments',{brand:'Bambu Lab',type:'PETG',colorName:'Koyu Gri',color:'#2a2d35',total:1000,remaining:290,price:680,temp:235,notes:''});
-  const f3=await fsAdd('filaments',{brand:'Polymaker',type:'PLA',colorName:'Turuncu',color:'#ff6b35',total:1000,remaining:910,price:380,temp:205,notes:''});
-  for(const d of[
-    {name:'Benchy',printer:pid,filament:f1,grams:28,duration:65,layer:0.2,infill:15,status:'done',notes:'Mükemmel.'},
-    {name:'Kasa Kapağı',printer:pid,filament:f1,grams:142,duration:310,layer:0.2,infill:30,status:'done',notes:'Elektronik.'},
-    {name:'Mini Vazo',printer:pid,filament:f3,grams:55,duration:90,layer:0.15,infill:0,status:'done',notes:'Vase mode.'},
-    {name:'Bisiklet Tutucu',printer:pid,filament:f2,grams:210,duration:480,layer:0.25,infill:50,status:'failed',notes:'Warping.'}
-  ])await fsAdd('prints',{...d,cost:cost(d.grams,d.duration,d.filament),date:Date.now()});
-  await loadAll();
-}
-async function syncStats(){
-  for(const p of P){const done=PR.filter(x=>x.printer===p.id&&x.status==='done');await fsUpd('printers',p.id,{totalPrints:done.length,totalFilament:done.reduce((a,x)=>a+(x.grams||0),0)});}
-}
-
-// Listeners
-function startL(){
-  unsubs.forEach(u=>u());
-  unsubs=[
-    fsLsn('printers',docs=>{P=docs;renderAll();}),
-    fsLsn('filaments',docs=>{F=docs;renderAll();}),
-    fsLsn('prints',docs=>{PR=docs.map(hy);renderAll();})
-  ];
-}
-function stopL(){unsubs.forEach(u=>u());unsubs=[];}
-
-// Active print
-let _act=null,_ts=null,_ti=null;
-function setAct(p){_act=p;_ts=Date.now();clearInterval(_ti);_ti=setInterval(()=>{const e=$('ab-timer');if(e)e.textContent=fmtT(Math.floor((Date.now()-_ts)/1000));},1000);$('active-banner').style.display='flex';$('ab-model').textContent=p.name;$('ab-sub').textContent=`${pName(p.printer)} · ${fName(p.filament)} · ${p.grams}g`;$('sb-dot').className='status-dot printing';$('sb-meta').textContent='⬡ Baskı Devam Ediyor';}
-async function completeP(){if(!_act)return;const el=Math.round((Date.now()-_ts)/60000);await fsUpd('prints',_act.id,{status:'done',duration:el||_act.duration,cost:cost(_act.grams,el||_act.duration,_act.filament)});const f=F.find(x=>x.id===_act.filament);if(f)await fsUpd('filaments',f.id,{remaining:Math.max(0,(f.remaining||0)-_act.grams)});await syncStats();stopAct();toast('Baskı tamamlandı! ✓','success');}
-async function failP(){if(!_act)return;await fsUpd('prints',_act.id,{status:'failed'});stopAct();toast('Başarısız işaretlendi.','error');}
-function stopAct(){clearInterval(_ti);_act=null;_ts=null;$('active-banner').style.display='none';$('sb-dot').className='status-dot';$('sb-meta').textContent='Boşta';}
-
-// Nav
-const TITLES={dashboard:'Dashboard',prints:'Baskılar',filaments:'Filament Stok',printers:'Yazıcılar',cost:'Maliyet Hesabı'};
-function showPage(id){if(!$('page-'+id))return;document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));$('page-'+id).classList.add('active');document.querySelector(`.nav-item[data-page="${id}"]`)?.classList.add('active');$('page-title').textContent=TITLES[id]||id;window.location.hash=id;$('sidebar').classList.remove('open');$('sidebar-overlay').classList.remove('open');document.body.style.overflow='';if(id==='cost')renderCost();}
-
-// Render
-function renderAll(){renderStats();renderRecent();renderPrints();renderFilaments();renderPrinters();renderCost();updateCharts();if(P[0])$('sb-name').textContent=P[0].name;}
-function renderStats(){const done=PR.filter(p=>p.status==='done');$('s-total').textContent=PR.length;$('s-hours').textContent=(done.reduce((a,p)=>a+(p.duration||0),0)/60).toFixed(1)+'s';$('s-grams').textContent=done.reduce((a,p)=>a+(p.grams||0),0)+'g';$('s-cost').textContent=fmtC(done.reduce((a,p)=>a+(p.cost||0),0));}
-function renderRecent(){const tb=$('tbody-recent');const rows=PR.slice(0,6);if(!rows.length){tb.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--muted)">Henüz baskı yok.</td></tr>`;return;}tb.innerHTML=rows.map(p=>`<tr onclick="window._det('${p.id}')"><td style="font-weight:600">${p.name}</td><td style="color:var(--muted)">${pName(p.printer)}</td><td style="font-family:var(--mono);color:var(--green)">${p.grams}g</td><td style="font-family:var(--mono);color:var(--blue)">${fmtD(p.duration)}</td><td style="font-family:var(--mono);color:var(--accent)">${fmtC(p.cost)}</td><td>${sBadge(p.status)}</td></tr>`).join('');}
-function renderPrints(){const tb=$('tbody-prints');const filt=$('filter-status').value;let rows=PR;if(filt)rows=rows.filter(p=>p.status===filt);$('prints-count').textContent=rows.length;if(!rows.length){tb.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">Baskı bulunamadı.</td></tr>`;return;}tb.innerHTML=rows.map(p=>{const f=F.find(x=>x.id===p.filament);return`<tr onclick="window._det('${p.id}')"><td style="font-weight:600">${p.name}</td><td style="color:var(--muted)">${pName(p.printer)}</td><td style="font-family:var(--mono);color:var(--green)">${p.grams}g</td><td>${f?`<span class="type-tag">${f.type}</span>`:'—'}</td><td style="font-family:var(--mono);color:var(--blue)">${fmtD(p.duration)}</td><td style="font-family:var(--mono);color:var(--accent)">${fmtC(p.cost)}</td><td>${sBadge(p.status)}</td><td><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();window._dp('${p.id}')">🗑</button></td></tr>`;}).join('');}
-function renderFilaments(){const g=$('filament-grid');if(!F.length){g.innerHTML=`<div class="empty-state"><div class="empty-icon">◎</div><div class="empty-title">Filament Yok</div></div>`;return;}g.innerHTML=F.map(f=>{const pct=Math.round((f.remaining/f.total)*100);return`<div class="filament-card"><div class="fc-header"><div><div class="fc-brand">${f.brand}</div><div class="fc-name">${f.colorName}</div></div><div class="fc-right"><div class="fc-dot" style="background:${f.color}"></div><span class="type-tag">${f.type}</span></div></div><div class="progress-wrap"><div class="progress-labels"><span>${f.remaining}g</span><span>%${pct}</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${fCol(pct)}"></div></div></div><div class="fc-meta"><div class="fc-meta-item"><span class="lbl">TOPLAM</span><span class="val">${f.total}g</span></div><div class="fc-meta-item"><span class="lbl">FİYAT</span><span class="val">₺${f.price}/kg</span></div><div class="fc-meta-item"><span class="lbl">SICAKLIK</span><span class="val">${f.temp}°C</span></div><div class="fc-meta-item"><span class="lbl">100g</span><span class="val">₺${(f.price*.1).toFixed(0)}</span></div></div>${f.notes?`<div style="margin-top:9px;font-size:12px;color:var(--muted)">${f.notes}</div>`:''}<div style="margin-top:12px"><button class="btn btn-sm btn-danger" style="width:100%" onclick="window._df('${f.id}')">🗑 Sil</button></div></div>`;}).join('');}
-function renderPrinters(){const g=$('printer-grid');if(!P.length){g.innerHTML=`<div class="empty-state"><div class="empty-icon">🖨</div><div class="empty-title">Yazıcı Yok</div></div>`;return;}g.innerHTML=P.map(p=>{const isA=_act?.printer===p.id;const tc=PR.filter(x=>x.printer===p.id&&x.status==='done').reduce((a,x)=>a+(x.cost||0),0);return`<div class="printer-card ${isA?'is-active':''}"><div class="pc-header"><div class="pc-icon">🖨</div><div style="flex:1"><div class="pc-name">${p.name}</div><div class="pc-model">${p.brand} · ${p.watt}W</div></div><span class="status-dot ${isA?'printing':''}"></span></div><div class="pc-stats"><div class="pc-stat"><div class="pc-stat-label">TOPLAM BASKI</div><div class="pc-stat-value" style="color:var(--accent)">${p.totalPrints||0}</div></div><div class="pc-stat"><div class="pc-stat-label">KULLANILAN</div><div class="pc-stat-value" style="color:var(--green)">${p.totalFilament||0}g</div></div><div class="pc-stat"><div class="pc-stat-label">MALİYET</div><div class="pc-stat-value" style="color:var(--purple)">${fmtC(tc)}</div></div><div class="pc-stat"><div class="pc-stat-label">YATAK</div><div class="pc-stat-value" style="font-size:12px;color:var(--blue)">${p.bed||'—'}</div></div></div>${p.notes?`<div style="margin-top:12px;font-size:12px;color:var(--muted)">${p.notes}</div>`:''}<div style="margin-top:13px"><button class="btn btn-sm btn-danger" onclick="window._dpr('${p.id}')">🗑 Sil</button></div></div>`;}).join('');}
-function renderCost(){const g=parseFloat($('calc-grams')?.value)||0,pr=parseFloat($('calc-price')?.value)||0,h=parseFloat($('calc-hours')?.value)||0,w=parseFloat($('calc-watt')?.value)||0,k=parseFloat($('calc-kwh')?.value)||0,m=parseFloat($('calc-margin')?.value)||0;const fc=(g/1000)*pr,ec=h*(w/1000)*k,sub=fc+ec,prof=sub*(m/100),tot=sub+prof;const r=$('cost-result');if(r)r.innerHTML=`<div class="cost-row"><span class="cost-label">Filament</span><span class="cost-value">₺${fc.toFixed(2)}</span></div><div class="cost-row"><span class="cost-label">Elektrik</span><span class="cost-value">₺${ec.toFixed(2)}</span></div><div class="cost-row"><span class="cost-label">Ara toplam</span><span class="cost-value">₺${sub.toFixed(2)}</span></div><div class="cost-row"><span class="cost-label">Kâr (${m}%)</span><span class="cost-value">₺${prof.toFixed(2)}</span></div><div class="cost-row total"><span>Satış Fiyatı</span><span>₺${tot.toFixed(2)}</span></div>`;const now=new Date(),tm=PR.filter(p=>{const d=new Date(p.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});const mf=tm.reduce((a,p)=>{const f=F.find(x=>x.id===p.filament);return a+(f?(p.grams/1000)*f.price:0);},0),me=tm.reduce((a,p)=>a+((p.duration||0)/60)*(200/1000)*EL,0);const ms=$('monthly-summary');if(ms)ms.innerHTML=`<div class="cost-row"><span class="cost-label">Bu ay baskı</span><span class="cost-value">${tm.length} adet</span></div><div class="cost-row"><span class="cost-label">Filament</span><span class="cost-value">₺${mf.toFixed(2)}</span></div><div class="cost-row"><span class="cost-label">Elektrik</span><span class="cost-value">₺${me.toFixed(2)}</span></div><div class="cost-row total"><span>Bu ay toplam</span><span>₺${(mf+me).toFixed(2)}</span></div>`;const fb=$('filament-breakdown');if(fb)fb.innerHTML=F.map(f=>{const u=PR.filter(p=>p.filament===f.id&&p.status==='done').reduce((a,p)=>a+p.grams,0);return`<div class="cost-row"><span class="cost-label"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${f.color};margin-right:6px;vertical-align:middle"></span>${f.brand} ${f.colorName} (${u}g)</span><span class="cost-value">${fmtC((u/1000)*f.price)}</span></div>`;}).join('')||'<div style="color:var(--muted);font-size:13px;padding:8px 0">Filament yok.</div>';}
-
-// Charts
-let mc=null,dc=null;
-function initCharts(){Chart.defaults.color='#6b7090';Chart.defaults.font.family="'Syne',sans-serif";Chart.defaults.font.size=12;const gr='rgba(255,255,255,0.04)';mc=new Chart($('chart-monthly'),{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:'rgba(255,107,53,.55)',borderColor:'#ff6b35',borderWidth:1,borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:gr},ticks:{color:'#6b7090'}},y:{grid:{color:gr},ticks:{color:'#6b7090',stepSize:1},beginAtZero:true}}}});dc=new Chart($('chart-material'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:['#ff6b35','#4a9eff','#2ecc8a','#a78bfa','#ffaa00','#ff4757'],borderWidth:0,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{padding:11,font:{size:11},color:'#6b7090',boxWidth:10}}}}});}
-function updateCharts(){if(!mc||!dc)return;const lb=[],ct=[];for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);const m=d.getMonth(),y=d.getFullYear();lb.push(d.toLocaleDateString('tr-TR',{month:'short'}));ct.push(PR.filter(p=>{const pd=new Date(p.date);return pd.getMonth()===m&&pd.getFullYear()===y;}).length);}mc.data.labels=lb;mc.data.datasets[0].data=ct;mc.update('none');const map={};PR.forEach(p=>{const f=F.find(x=>x.id===p.filament);if(f)map[f.type]=(map[f.type]||0)+(p.grams||0);});dc.data.labels=Object.keys(map);dc.data.datasets[0].data=Object.values(map);dc.update('none');}
-
-// Detail
-window._det=function(id){const p=PR.find(x=>x.id===id);if(!p)return;const f=F.find(x=>x.id===p.filament);$('detail-title').textContent=p.name;$('detail-body').innerHTML=`<div class="detail-grid"><div class="detail-cell"><span class="lbl">Yazıcı</span><span class="val" style="font-size:13px">${pName(p.printer)}</span></div><div class="detail-cell"><span class="lbl">Durum</span><span class="val">${sBadge(p.status)}</span></div><div class="detail-cell"><span class="lbl">Filament</span><span class="val" style="font-size:12px">${f?f.brand+' '+f.colorName+' ('+f.type+')':'—'}</span></div><div class="detail-cell"><span class="lbl">Kullanılan</span><span class="val" style="color:var(--green)">${p.grams}g</span></div><div class="detail-cell"><span class="lbl">Süre</span><span class="val" style="color:var(--blue)">${fmtD(p.duration)}</span></div><div class="detail-cell"><span class="lbl">Maliyet</span><span class="val" style="color:var(--accent)">${fmtC(p.cost)}</span></div><div class="detail-cell"><span class="lbl">Katman</span><span class="val" style="font-size:13px">${p.layer||'—'}mm</span></div><div class="detail-cell"><span class="lbl">Doluluk</span><span class="val" style="font-size:13px">%${p.infill||'—'}</span></div></div><div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Notlar</div><div class="notes-box">${p.notes||'Not girilmemiş.'}</div><div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:10px">${fmtDt(p.date)}</div><div class="modal-footer" style="padding:14px 0 0;border-top:1px solid var(--border);margin-top:14px"><button class="btn btn-danger btn-sm" onclick="window._dp('${p.id}');closeModal('modal-detail')">🗑 Sil</button></div>`;openM('modal-detail');};
-window._dp=async id=>{if(!confirm('Baskıyı sil?'))return;await fsDel('prints',id);await syncStats();toast('Silindi.','info');};
-window._df=async id=>{if(!confirm('Makarayı sil?'))return;await fsDel('filaments',id);toast('Silindi.','info');};
-window._dpr=async id=>{if(!confirm('Yazıcıyı sil?'))return;await fsDel('printers',id);toast('Silindi.','info');};
-
-// Print form
-function openPF(){$('p-printer').innerHTML=P.length?P.map(p=>`<option value="${p.id}">${p.name}</option>`).join(''):'<option>— Önce yazıcı ekle —</option>';$('p-filament').innerHTML=F.length?F.map(f=>`<option value="${f.id}">${f.brand} ${f.colorName} (${f.type}) — ${f.remaining}g</option>`).join(''):'<option>— Önce filament ekle —</option>';['p-name','p-grams','p-duration','p-layer','p-infill','p-notes'].forEach(x=>$(x).value='');$('p-status').value='printing';openM('modal-print');}
-$('btn-save-print').addEventListener('click',async()=>{const n=$('p-name').value.trim(),g=parseFloat($('p-grams').value)||0,pid=$('p-printer').value,fid=$('p-filament').value;if(!n){toast('Model adı gerekli!','error');return;}if(!g){toast('Gram gerekli!','error');return;}if(!pid){toast('Yazıcı seç!','error');return;}const dur=parseInt($('p-duration').value)||0,st=$('p-status').value,c=cost(g,dur,fid);const pr={name:n,printer:pid,filament:fid,grams:g,duration:dur,cost:c,status:st,layer:parseFloat($('p-layer').value)||0.2,infill:parseInt($('p-infill').value)||20,notes:$('p-notes').value,date:Date.now()};const id=await fsAdd('prints',pr);if(st==='printing'){if(_act)await completeP();setAct({id,...pr});}else{const f=F.find(x=>x.id===fid);if(f)await fsUpd('filaments',f.id,{remaining:Math.max(0,(f.remaining||0)-g)});}await syncStats();closeM('modal-print');toast('Baskı eklendi!','success');});
-
-// Filament form
-const SW=['#f0f0ec','#1a1a2e','#ff6b35','#4a9eff','#2ecc8a','#a78bfa','#ffaa00','#ff4757','#ff6b9d','#c8d6e5'];
-function buildSW(){const r=$('color-swatches');r.innerHTML=SW.map(c=>`<div class="color-swatch" style="background:${c}" data-c="${c}"></div>`).join('');r.querySelectorAll('.color-swatch').forEach(s=>s.addEventListener('click',()=>{r.querySelectorAll('.color-swatch').forEach(x=>x.classList.remove('selected'));s.classList.add('selected');$('f-color').value=s.dataset.c;}));}
-$('btn-save-filament').addEventListener('click',async()=>{const b=$('f-brand').value.trim(),cn=$('f-color-name').value.trim();if(!b||!cn){toast('Marka ve renk gerekli!','error');return;}const t=parseFloat($('f-total').value)||1000;await fsAdd('filaments',{brand:b,colorName:cn,type:$('f-type').value,color:$('f-color').value,total:t,remaining:parseFloat($('f-remaining').value)||t,price:parseFloat($('f-price').value)||0,temp:parseFloat($('f-temp').value)||210,notes:$('f-notes').value});closeM('modal-filament');toast('Filament eklendi!','success');});
-
-// Printer form
-$('btn-save-printer').addEventListener('click',async()=>{const n=$('pr-name').value.trim();if(!n){toast('İsim gerekli!','error');return;}await fsAdd('printers',{name:n,brand:$('pr-brand').value,watt:parseFloat($('pr-watt').value)||200,bed:$('pr-bed').value,price:parseFloat($('pr-price').value)||0,notes:$('pr-notes').value,totalPrints:0,totalFilament:0});closeM('modal-printer');toast('Yazıcı eklendi!','success');});
-
-// Auth UI
-function showLoad(msg='Bağlanıyor...'){let el=$('app-loading');if(!el){el=document.createElement('div');el.id='app-loading';el.className='app-loading';el.innerHTML=`<div class="app-loading-logo">Print<span>Flow</span></div><div class="spinner"></div><div id="loading-msg" style="font-size:13px;color:var(--muted);margin-top:8px">${msg}</div>`;document.body.appendChild(el);}else $('loading-msg').textContent=msg;}
-function hideLoad(){$('app-loading')?.remove();}
-function showLogin(){if($('login-screen'))return;const el=document.createElement('div');el.id='login-screen';el.innerHTML=`<div class="login-overlay"><div class="login-card"><div class="login-logo">Print<span>Flow</span></div><div class="login-sub">3D Yazıcı Üretim Takibi</div><div class="login-divider"></div><p class="login-desc">Baskı sürelerin, filament stoğun ve maliyetlerin tek yerde.</p><button class="btn-google" id="google-login-btn"><svg width="18" height="18" viewBox="0 0 18 18" style="flex-shrink:0"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z"/></svg>Google ile Giriş Yap</button><div id="login-error" style="display:none" class="login-error"></div><p class="login-note">Verileriniz güvenle saklanır ve sadece size özeldir.</p></div></div>`;document.body.appendChild(el);$('google-login-btn').addEventListener('click',async()=>{const btn=$('google-login-btn'),err=$('login-error');btn.disabled=true;btn.style.opacity='.7';err.style.display='none';try{await signInWithRedirect(auth,prov);}catch(e){btn.disabled=false;btn.style.opacity='';err.style.display='block';const map={'auth/unauthorized-domain':'Bu domain Firebase\'de yetkili değil! Authentication → Authorized domains\'e ekle.','auth/network-request-failed':'İnternet bağlantısı yok.'};err.textContent=map[e.code]||`Hata: ${e.code}`;}});}
-function buildMenu(user){$('user-menu-wrap')?.remove();const w=document.createElement('div');w.id='user-menu-wrap';w.className='user-menu-wrap';const av=user.photoURL?`<img src="${user.photoURL}" class="user-avatar-img" referrerpolicy="no-referrer"/>`:`<div class="user-avatar-fallback">${(user.displayName||'?')[0].toUpperCase()}</div>`;w.innerHTML=`<button class="user-avatar-btn" id="uab">${av}</button><div class="user-dropdown" id="udd"><div class="user-dropdown-header"><div class="udd-name">${user.displayName||'Kullanıcı'}</div><div class="udd-email">${user.email||''}</div></div><div class="user-dropdown-divider"></div><button class="user-dropdown-item" id="logout-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Çıkış Yap</button></div>`;$('topbar-actions').prepend(w);$('uab').addEventListener('click',e=>{e.stopPropagation();$('udd').classList.toggle('open');});document.addEventListener('click',()=>$('udd')?.classList.remove('open'));$('logout-btn').addEventListener('click',async()=>{await signOut(auth);window.location.reload();});}
-
-// Bootstrap
-showLoad();
-$('sidebar').style.display='none';
-$('main-content').style.display='none';
-
-await getRedirectResult(auth).catch(e=>console.error('redirect:',e.code,e.message));
-
-onAuthStateChanged(auth,async user=>{
-  hideLoad();
-  if(user){
-    $('login-screen')?.remove();
-    $('sidebar').style.display='';
-    $('main-content').style.display='';
-    buildMenu(user);
-    showLoad('Veriler yükleniyor...');
-    await loadAll();
-    await seed();
-    hideLoad();
-    initCharts();
-    renderAll();
-    startL();
-    $('btn-complete').addEventListener('click',completeP);
-    $('btn-fail').addEventListener('click',failP);
-    ['calc-grams','calc-price','calc-hours','calc-watt','calc-kwh','calc-margin'].forEach(id=>$(id).addEventListener('input',renderCost));
-    $('filter-status').addEventListener('change',renderPrints);
-    $('new-print-btn').addEventListener('click',openPF);
-    $('prints-add-btn').addEventListener('click',openPF);
-    $('filament-add-btn').addEventListener('click',()=>{buildSW();['f-brand','f-color-name','f-notes'].forEach(x=>$(x).value='');$('f-total').value=1000;$('f-remaining').value=1000;$('f-price').value=450;$('f-temp').value=210;openM('modal-filament');});
-    $('printer-add-btn').addEventListener('click',()=>{['pr-name','pr-bed','pr-notes'].forEach(x=>$(x).value='');$('pr-watt').value=200;$('pr-price').value='';openM('modal-printer');});
-    $('main-nav').addEventListener('click',e=>{const it=e.target.closest('.nav-item');if(it)showPage(it.dataset.page);});
-    document.addEventListener('click',e=>{const b=e.target.closest('[data-page]');if(b&&!b.classList.contains('nav-item'))showPage(b.dataset.page);const c=e.target.closest('[data-close]');if(c)closeM(c.dataset.close);if(e.target.classList.contains('modal-overlay')){document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));document.body.style.overflow='';}});
-    $('burger-btn').addEventListener('click',()=>{$('sidebar').classList.toggle('open');$('sidebar-overlay').classList.toggle('open');});
-    $('sidebar-overlay').addEventListener('click',()=>{$('sidebar').classList.remove('open');$('sidebar-overlay').classList.remove('open');});
-    document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.modal-overlay.open').forEach(m=>m.classList.remove('open'));document.body.style.overflow='';}});
-    const hash=window.location.hash.replace('#','');
-    if(hash&&TITLES[hash])showPage(hash);
-    const ip=PR.find(p=>p.status==='printing');
-    if(ip)setAct(ip);
-    toast(`Hoş geldin, ${user.displayName?.split(' ')[0]||'Kullanıcı'}! 👋`,'success');
-  } else {
-    $('sidebar').style.display='none';
-    $('main-content').style.display='none';
-    $('user-menu-wrap')?.remove();
-    stopL();
-    showLogin();
-  }
-});
-</script>
+  <!-- App Scripts -->
+  <script src="js/store.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/pages/dashboard.js"></script>
+  <script src="js/pages/prints.js"></script>
+  <script src="js/pages/filaments.js"></script>
+  <script src="js/pages/printers.js"></script>
+  <script src="js/pages/cost.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
