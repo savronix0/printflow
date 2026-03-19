@@ -4,7 +4,7 @@
  * signInWithRedirect kullanılıyor (popup yerine — daha güvenilir)
  */
 
-import { initializeApp }              from 'firebase/app';
+import { initializeApp }              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider,
          signInWithRedirect,
          getRedirectResult,
@@ -20,17 +20,14 @@ import { getFirestore, collection, doc,
    🔧 BURAYA KENDİ CONFIG'İNİ YAPIŞTIR
    Firebase Console → ⚙️ Project Settings → General → Your apps → Config
 ───────────────────────────────────────────────────────────── */
-
-// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyB1AxvgT5wT_FUK4Wr4MGsheSBStb88kbs",
-  authDomain: "printflow-511cf.firebaseapp.com",
-  projectId: "printflow-511cf",
-  storageBucket: "printflow-511cf.firebasestorage.app",
-  messagingSenderId: "928759906552",
-  appId: "1:928759906552:web:4307a41d3484c3a0cfbb0d"
+  apiKey:            "BURAYA_API_KEY",
+  authDomain:        "BURAYA_AUTH_DOMAIN",
+  projectId:         "BURAYA_PROJECT_ID",
+  storageBucket:     "BURAYA_STORAGE_BUCKET",
+  messagingSenderId: "BURAYA_MESSAGING_SENDER_ID",
+  appId:             "BURAYA_APP_ID",
 };
-
 
 /* ── Init ─────────────────────────────────────────────────── */
 const app      = initializeApp(firebaseConfig);
