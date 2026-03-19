@@ -1,27 +1,24 @@
 /**
  * firebase.js — Firebase başlatma & servis exports
- *
- * !! KURULUM !!
- * 1. Firebase Console → Project Settings → General → Your apps → Config
- * 2. Aşağıdaki firebaseConfig nesnesini kendi değerlerinle doldur
- * 3. authDomain'e kendi domain'ini de ekle (GitHub Pages için)
+ * Storage kaldırıldı (free plan desteklemiyor)
+ * signInWithRedirect kullanılıyor (popup yerine — daha güvenilir)
  */
 
-import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { initializeApp }              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider,
-         signInWithPopup, signOut,
-         onAuthStateChanged }                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+         signInWithRedirect,
+         getRedirectResult,
+         signOut,
+         onAuthStateChanged }         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc,
-         getDocs, getDoc, addDoc, setDoc,
-         updateDoc, deleteDoc,
-         onSnapshot, serverTimestamp,
-         query, orderBy, where }                from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getStorage, ref, uploadBytes,
-         getDownloadURL, deleteObject }         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+         getDocs, addDoc, updateDoc,
+         deleteDoc, onSnapshot,
+         serverTimestamp, query,
+         orderBy }                    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 /* ─────────────────────────────────────────────────────────────
-   🔧 BURAYA KENDİ CONFIG'İNİ YAPIŞTIIR
-   Firebase Console → Project Settings → General → Your apps
+   🔧 BURAYA KENDİ CONFIG'İNİ YAPIŞTIR
+   Firebase Console → ⚙️ Project Settings → General → Your apps → Config
 ───────────────────────────────────────────────────────────── */
 const firebaseConfig = {
   apiKey: "AIzaSyB1AxvgT5wT_FUK4Wr4MGsheSBStb88kbs",
@@ -32,21 +29,30 @@ const firebaseConfig = {
   appId: "1:928759906552:web:4307a41d3484c3a0cfbb0d"
 };
 
-/* ── Init ───────────────────────────────────────────────────── */
-const app       = initializeApp(firebaseConfig);
-const auth      = getAuth(app);
-const db        = getFirestore(app);
-const storage   = getStorage(app);
-const provider  = new GoogleAuthProvider();
 
-/* ── Auth helpers ───────────────────────────────────────────── */
+/* ── Init ─────────────────────────────────────────────────── */
+const app      = initializeApp(firebaseConfig);
+const auth     = getAuth(app);
+const db       = getFirestore(app);
+const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' });
+
+/* ── Auth helpers ─────────────────────────────────────────── */
+
+// Redirect ile giriş — popup'tan çok daha güvenilir
+// GitHub Pages, mobil, popup blocker sorunlarını çözer
 async function loginWithGoogle() {
+  await signInWithRedirect(auth, provider);
+}
+
+// Sayfa yüklenince redirect sonucunu yakala
+async function handleRedirectResult() {
   try {
-    const result = await signInWithPopup(auth, provider);
-    return result.user;
+    const result = await getRedirectResult(auth);
+    return result?.user ?? null;
   } catch (err) {
-    console.error('Google giriş hatası:', err);
-    throw err;
+    console.error('Redirect sonucu:', err.code, err.message);
+    return null;
   }
 }
 
@@ -54,28 +60,29 @@ async function logout() {
   await signOut(auth);
 }
 
-/* ── Firestore path helper ──────────────────────────────────── */
-// Tüm kullanıcı verisi: /users/{uid}/prints, /filaments, /printers
+/* ── Firestore path helpers ───────────────────────────────── */
 function userCol(colName) {
+  if (!auth.currentUser) throw new Error('Giriş yapılmamış');
   return collection(db, 'users', auth.currentUser.uid, colName);
 }
 function userDoc(colName, id) {
+  if (!auth.currentUser) throw new Error('Giriş yapılmamış');
   return doc(db, 'users', auth.currentUser.uid, colName, id);
 }
 
-/* ── Firestore CRUD ─────────────────────────────────────────── */
+/* ── Firestore CRUD ───────────────────────────────────────── */
 async function fsGetAll(colName) {
-  const q   = query(userCol(colName), orderBy('createdAt', 'desc'));
+  const q    = query(userCol(colName), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
 async function fsAdd(colName, data) {
-  const docRef = await addDoc(userCol(colName), {
+  const ref = await addDoc(userCol(colName), {
     ...data,
     createdAt: serverTimestamp(),
   });
-  return docRef.id;
+  return ref.id;
 }
 
 async function fsUpdate(colName, id, data) {
@@ -89,36 +96,19 @@ async function fsDelete(colName, id) {
   await deleteDoc(userDoc(colName, id));
 }
 
-/* ── Real-time listener ─────────────────────────────────────── */
+/* ── Real-time listener ───────────────────────────────────── */
 function fsListen(colName, callback) {
   const q = query(userCol(colName), orderBy('createdAt', 'desc'));
-  return onSnapshot(q, snap => {
-    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    callback(docs);
-  });
+  return onSnapshot(q,
+    snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+    err  => console.error('fsListen hata:', colName, err)
+  );
 }
 
-/* ── Storage (fotoğraf yükleme) ─────────────────────────────── */
-async function uploadPhoto(file, path) {
-  const storageRef = ref(storage, `users/${auth.currentUser.uid}/${path}`);
-  const snapshot   = await uploadBytes(storageRef, file);
-  return await getDownloadURL(snapshot.ref);
-}
-
-async function deletePhoto(url) {
-  try {
-    const storageRef = ref(storage, url);
-    await deleteObject(storageRef);
-  } catch (e) {
-    console.warn('Foto silinemedi:', e);
-  }
-}
-
-/* ── Exports ────────────────────────────────────────────────── */
+/* ── Exports ──────────────────────────────────────────────── */
 export {
-  auth, db, storage,
-  loginWithGoogle, logout, onAuthStateChanged,
+  auth, db,
+  loginWithGoogle, handleRedirectResult, logout, onAuthStateChanged,
   fsGetAll, fsAdd, fsUpdate, fsDelete, fsListen,
-  uploadPhoto, deletePhoto,
   serverTimestamp,
 };
