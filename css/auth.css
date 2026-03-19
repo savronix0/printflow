@@ -1,0 +1,224 @@
+/* ── Login Overlay ───────────────────────────────────────────── */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--clr-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.login-card {
+  background: var(--clr-bg2);
+  border: 1px solid var(--clr-border2);
+  border-radius: 20px;
+  padding: 48px 44px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  animation: loginIn 0.3s ease;
+}
+@keyframes loginIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.login-logo {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.login-logo span { color: var(--clr-accent); }
+
+.login-sub {
+  font-size: 13px;
+  color: var(--clr-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.login-divider {
+  height: 1px;
+  background: var(--clr-border);
+  margin: 28px 0;
+}
+
+.login-desc {
+  font-size: 14px;
+  color: var(--clr-text2);
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 20px;
+  background: #fff;
+  color: #3c4043;
+  border: none;
+  border-radius: var(--r-md);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.btn-google:hover {
+  background: #f8f8f8;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+  transform: translateY(-1px);
+}
+.btn-google:active { transform: translateY(0); }
+.btn-google:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.login-note {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--clr-muted);
+  line-height: 1.5;
+}
+
+/* ── User Menu (topbar) ──────────────────────────────────────── */
+.user-menu-wrap {
+  position: relative;
+}
+
+.user-avatar-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--clr-border2);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--clr-bg3);
+  transition: border-color var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.user-avatar-btn:hover { border-color: var(--clr-accent); }
+
+.user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.user-avatar-fallback {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--clr-accent);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  background: var(--clr-bg2);
+  border: 1px solid var(--clr-border2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 300;
+  overflow: hidden;
+}
+.user-dropdown.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.user-dropdown-header {
+  padding: 14px 16px;
+}
+.udd-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.udd-email {
+  font-size: 12px;
+  color: var(--clr-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-dropdown-divider {
+  height: 1px;
+  background: var(--clr-border);
+}
+
+.user-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--clr-red);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.user-dropdown-item:hover { background: var(--clr-red-bg); }
+
+/* ── Loading spinner (veri yüklenirken) ──────────────────────── */
+.app-loading {
+  position: fixed;
+  inset: 0;
+  background: var(--clr-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 8000;
+  gap: 16px;
+}
+.app-loading-logo {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+}
+.app-loading-logo span { color: var(--clr-accent); }
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--clr-border2);
+  border-top-color: var(--clr-accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Sync indicator ──────────────────────────────────────────── */
+.sync-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--clr-green);
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
+  animation: blink 2s ease-in-out infinite;
+}
