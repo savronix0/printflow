@@ -21,14 +21,13 @@ import { getFirestore, collection, doc,
    Firebase Console → ⚙️ Project Settings → General → Your apps → Config
 ───────────────────────────────────────────────────────────── */
 const firebaseConfig = {
-  apiKey:            "BURAYA_API_KEY",
-  authDomain:        "BURAYA_AUTH_DOMAIN",
-  projectId:         "BURAYA_PROJECT_ID",
-  storageBucket:     "BURAYA_STORAGE_BUCKET",
-  messagingSenderId: "BURAYA_MESSAGING_SENDER_ID",
-  appId:             "BURAYA_APP_ID",
+  apiKey: "AIzaSyB1AxvgT5wT_FUK4Wr4MGsheSBStb88kbs",
+  authDomain: "printflow-511cf.firebaseapp.com",
+  projectId: "printflow-511cf",
+  storageBucket: "printflow-511cf.firebasestorage.app",
+  messagingSenderId: "928759906552",
+  appId: "1:928759906552:web:4307a41d3484c3a0cfbb0d"
 };
-
 /* ── Init ─────────────────────────────────────────────────── */
 const app      = initializeApp(firebaseConfig);
 const auth     = getAuth(app);
