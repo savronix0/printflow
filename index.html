@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0b0e" />
+  <meta name="description" content="PrintFlow — 3D Yazıcı Üretim Takip Sistemi" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PrintFlow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="PrintFlow — 3D Yazıcı Takip" />
+  <meta property="og:description" content="Baskı süresi, filament kullanımı ve maliyet takibi" />
+  <meta property="og:type" content="website" />
+
+  <title>PrintFlow — 3D Yazıcı Takip</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
+</head>
+<body>
+
+  <!-- ── SIDEBAR ─────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">Print<span>Flow</span></div>
+      <div class="logo-sub">3D Tracker v1.0</div>
+    </div>
+
+    <nav class="sidebar-nav" id="main-nav">
+      <span class="nav-section-label">Ana Menü</span>
+      <a class="nav-item active" data-page="dashboard" href="#dashboard">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="2" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item" data-page="prints" href="#prints">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span>Baskılar</span>
+      </a>
+
+      <span class="nav-section-label">Yönetim</span>
+      <a class="nav-item" data-page="filaments" href="#filaments">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
+        <span>Filament Stok</span>
+      </a>
+      <a class="nav-item" data-page="printers" href="#printers">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M6 7V4h8v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="14" cy="11.5" r="1" fill="currentColor"/></svg>
+        <span>Yazıcılar</span>
+      </a>
+
+      <span class="nav-section-label">Araçlar</span>
+      <a class="nav-item" data-page="cost" href="#cost">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M6 6h6a2 2 0 010 4H8a2 2 0 000 4h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span>Maliyet</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="printer-live-card" id="sidebar-printer-card">
+        <div class="plc-header">
+          <span class="plc-name" id="sb-printer-name">—</span>
+          <span class="status-dot idle" id="sb-status-dot"></span>
+        </div>
+        <div class="plc-meta" id="sb-printer-meta">Boşta</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MOBILE OVERLAY ───────────────────────────────────── -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ── MAIN ────────────────────────────────────────────── -->
+  <main class="main-content" id="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="burger-btn" id="burger-btn" aria-label="Menü">
+        <span></span><span></span><span></span>
+      </button>
+      <h1 class="topbar-title" id="page-title">Dashboard</h1>
+      <div class="topbar-actions">
+        <button class="btn btn-accent" id="new-print-btn">
+          <svg viewBox="0 0 16 16" fill="none" width="14" height="14"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Yeni Baskı
+        </button>
+      </div>
+    </header>
+
+    <!-- Page Container -->
+    <div class="page-container">
+
+      <!-- ── DASHBOARD ────────────────────────────────────── -->
+      <section class="page active" id="page-dashboard">
+
+        <!-- Active Print Banner -->
+        <div class="active-banner" id="active-banner" style="display:none">
+          <div class="ab-icon">🖨️</div>
+          <div class="ab-info">
+            <div class="ab-title" id="ab-model-name">Baskı devam ediyor</div>
+            <div class="ab-sub" id="ab-sub">—</div>
+          </div>
+          <div class="ab-timer" id="ab-timer">00:00:00</div>
+          <div class="ab-actions">
+            <button class="btn btn-sm btn-success" id="btn-complete">✓ Tamamla</button>
+            <button class="btn btn-sm btn-danger"  id="btn-fail">✕ Başarısız</button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+          <div class="stat-card accent">
+            <div class="stat-label">Toplam Baskı</div>
+            <div class="stat-value" id="s-total">0</div>
+            <div class="stat-hint">tüm zamanlar</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-label">Toplam Süre</div>
+            <div class="stat-value" id="s-hours">0s</div>
+            <div class="stat-hint">baskı saati</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-label">Filament</div>
+            <div class="stat-value" id="s-grams">0g</div>
+            <div class="stat-hint">toplam kullanılan</div>
+          </div>
+          <div class="stat-card purple">
+            <div class="stat-label">Toplam Maliyet</div>
+            <div class="stat-value" id="s-cost">₺0</div>
+            <div class="stat-hint">filament + elektrik</div>
+          </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-row">
+          <div class="card">
+            <div class="card-header">Aylık Baskı Sayısı</div>
+            <div class="chart-wrap"><canvas id="chart-monthly"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-header">Malzeme Dağılımı</div>
+            <div class="chart-wrap"><canvas id="chart-material"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Recent Prints -->
+        <div class="section-header">
+          <h2 class="section-title">Son Baskılar</h2>
+          <button class="btn btn-sm btn-ghost" data-page="prints">Tümünü Gör →</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="tbl-recent">
+            <thead>
+              <tr>
+                <th>Model</th><th>Yazıcı</th><th>Filament</th>
+                <th>Süre</th><th>Maliyet</th><th>Durum</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-recent"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── PRINTS ────────────────────────────────────────── -->
+      <section class="page" id="page-prints">
+        <div class="section-header">
+          <h2 class="section-title">Baskılar <span class="badge-count" id="prints-count">0</span></h2>
+          <div class="section-actions">
+            <select class="select-sm" id="filter-status">
+              <option value="">Tüm Durumlar</option>
+              <option value="done">Tamamlanan</option>
+              <option value="printing">Devam Eden</option>
+              <option value="failed">Başarısız</option>
+            </select>
+            <button class="btn btn-accent btn-sm" id="prints-add-btn">＋ Yeni Baskı</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Model</th><th>Yazıcı</th><th>Filament</th>
+                <th>Malzeme</th><th>Süre</th><th>Maliyet</th><th>Durum</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-prints"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── FILAMENTS ─────────────────────────────────────── -->
+      <section class="page" id="page-filaments">
+        <div class="section-header">
+          <h2 class="section-title">Filament Stok</h2>
+          <button class="btn btn-accent btn-sm" id="filament-add-btn">＋ Makara Ekle</button>
+        </div>
+        <div class="filament-grid" id="filament-grid"></div>
+      </section>
+
+      <!-- ── PRINTERS ──────────────────────────────────────── -->
+      <section class="page" id="page-printers">
+        <div class="section-header">
+          <h2 class="section-title">Yazıcılar</h2>
+          <button class="btn btn-accent btn-sm" id="printer-add-btn">＋ Yazıcı Ekle</button>
+        </div>
+        <div class="printer-grid" id="printer-grid"></div>
+      </section>
+
+      <!-- ── COST ──────────────────────────────────────────── -->
+      <section class="page" id="page-cost">
+        <div class="calc-layout">
+          <div class="card">
+            <div class="card-header">Maliyet Hesaplayıcı</div>
+            <div class="calc-form">
+              <div class="form-group">
+                <label for="calc-grams">Filament Kullanımı (gram)</label>
+                <input type="number" id="calc-grams" value="100" />
+              </div>
+              <div class="form-group">
+                <label for="calc-price">Filament Fiyatı (₺/kg)</label>
+                <input type="number" id="calc-price" value="450" />
+              </div>
+              <div class="form-group">
+                <label for="calc-hours">Baskı Süresi (saat)</label>
+                <input type="number" id="calc-hours" value="5" step="0.5" />
+              </div>
+              <div class="form-group">
+                <label for="calc-watt">Yazıcı Gücü (Watt)</label>
+                <input type="number" id="calc-watt" value="200" />
+              </div>
+              <div class="form-group">
+                <label for="calc-kwh">Elektrik (₺/kWh)</label>
+                <input type="number" id="calc-kwh" value="5.8" step="0.1" />
+              </div>
+              <div class="form-group">
+                <label for="calc-margin">Kâr Marjı (%)</label>
+                <input type="number" id="calc-margin" value="30" />
+              </div>
+            </div>
+            <div class="cost-result" id="cost-result"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">Bu Ayki Özet</div>
+            <div id="monthly-summary"></div>
+            <div class="divider"></div>
+            <div class="card-header" style="padding-top:0">Filament Harcamaları</div>
+            <div id="filament-breakdown"></div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /page-container -->
+  </main>
+
+  <!-- ══════════════ MODALS ══════════════ -->
+
+  <!-- New Print -->
+  <div class="modal-overlay" id="modal-print">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Yeni Baskı</h2>
+        <button class="modal-close" data-close="modal-print">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="p-name">Model Adı *</label>
+            <input type="text" id="p-name" placeholder="örn. Vase Mode, Benchy..." />
+          </div>
+          <div class="form-group">
+            <label for="p-printer">Yazıcı *</label>
+            <select id="p-printer"></select>
+          </div>
+          <div class="form-group">
+            <label for="p-filament">Filament Makarası</label>
+            <select id="p-filament"></select>
+          </div>
+          <div class="form-group">
+            <label for="p-grams">Filament (gram) *</label>
+            <input type="number" id="p-grams" placeholder="örn. 85" />
+          </div>
+          <div class="form-group">
+            <label for="p-duration">Tahmini Süre (dk)</label>
+            <input type="number" id="p-duration" placeholder="örn. 120" />
+          </div>
+          <div class="form-group">
+            <label for="p-layer">Katman Yüksekliği (mm)</label>
+            <input type="number" id="p-layer" placeholder="0.2" step="0.05" />
+          </div>
+          <div class="form-group">
+            <label for="p-infill">Doluluk (%)</label>
+            <input type="number" id="p-infill" placeholder="20" />
+          </div>
+          <div class="form-group full">
+            <label for="p-status">Durum</label>
+            <select id="p-status">
+              <option value="printing">Devam Ediyor</option>
+              <option value="done">Tamamlandı</option>
+              <option value="failed">Başarısız</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label for="p-notes">Notlar</label>
+            <textarea id="p-notes" placeholder="Baskı hakkında notlar..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close="modal-print">İptal</button>
+        <button class="btn btn-accent" id="btn-save-print">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Filament -->
+  <div class="modal-overlay" id="modal-filament">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Makara Ekle</h2>
+        <button class="modal-close" data-close="modal-filament">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="f-brand">Marka *</label>
+            <input type="text" id="f-brand" placeholder="eSun, Bambu, Polymaker..." />
+          </div>
+          <div class="form-group">
+            <label for="f-type">Malzeme *</label>
+            <select id="f-type">
+              <option>PLA</option><option>PLA+</option><option>PETG</option>
+              <option>ABS</option><option>ASA</option><option>TPU</option>
+              <option>Nylon</option><option>CF-PLA</option><option>Resin</option><option>Diğer</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label for="f-color-name">Renk Adı *</label>
+            <input type="text" id="f-color-name" placeholder="örn. Beyaz, Galaxy Black..." />
+          </div>
+          <div class="form-group full">
+            <label>Renk Seç</label>
+            <div class="color-swatch-row" id="color-swatches"></div>
+            <input type="color" id="f-color" value="#ff6b35" />
+          </div>
+          <div class="form-group">
+            <label for="f-total">Toplam Ağırlık (g)</label>
+            <input type="number" id="f-total" value="1000" />
+          </div>
+          <div class="form-group">
+            <label for="f-remaining">Kalan Ağırlık (g)</label>
+            <input type="number" id="f-remaining" value="1000" />
+          </div>
+          <div class="form-group">
+            <label for="f-price">Fiyat (₺/kg)</label>
+            <input type="number" id="f-price" value="450" />
+          </div>
+          <div class="form-group">
+            <label for="f-temp">Baskı Sıcaklığı (°C)</label>
+            <input type="number" id="f-temp" value="210" />
+          </div>
+          <div class="form-group full">
+            <label for="f-notes">Notlar</label>
+            <textarea id="f-notes" placeholder="Filament hakkında notlar..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close="modal-filament">İptal</button>
+        <button class="btn btn-accent" id="btn-save-filament">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Printer -->
+  <div class="modal-overlay" id="modal-printer">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Yazıcı Ekle</h2>
+        <button class="modal-close" data-close="modal-printer">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="pr-name">Yazıcı Adı *</label>
+            <input type="text" id="pr-name" placeholder="örn. Ender 3 Pro" />
+          </div>
+          <div class="form-group">
+            <label for="pr-brand">Marka</label>
+            <select id="pr-brand">
+              <option>Creality</option><option>Bambu Lab</option><option>Prusa</option>
+              <option>Voron</option><option>Anycubic</option><option>Elegoo</option><option>Diğer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="pr-watt">Güç (Watt)</label>
+            <input type="number" id="pr-watt" value="200" />
+          </div>
+          <div class="form-group">
+            <label for="pr-bed">Build Hacmi (mm)</label>
+            <input type="text" id="pr-bed" placeholder="220x220x250" />
+          </div>
+          <div class="form-group">
+            <label for="pr-price">Satın Alma Fiyatı (₺)</label>
+            <input type="number" id="pr-price" placeholder="0" />
+          </div>
+          <div class="form-group full">
+            <label for="pr-notes">Notlar</label>
+            <textarea id="pr-notes" placeholder="Donanım, mod, bakım notları..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close="modal-printer">İptal</button>
+        <button class="btn btn-accent" id="btn-save-printer">Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print Detail -->
+  <div class="modal-overlay" id="modal-detail">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="detail-title">Baskı Detayı</h2>
+        <button class="modal-close" data-close="modal-detail">✕</button>
+      </div>
+      <div class="modal-body" id="detail-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <!-- App Scripts -->
+  <script src="js/store.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/pages/dashboard.js"></script>
+  <script src="js/pages/prints.js"></script>
+  <script src="js/pages/filaments.js"></script>
+  <script src="js/pages/printers.js"></script>
+  <script src="js/pages/cost.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
