@@ -4,7 +4,7 @@
  * signInWithRedirect kullanılıyor (popup yerine — daha güvenilir)
  */
 
-import { initializeApp }              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { initializeApp }              from 'firebase/app';
 import { getAuth, GoogleAuthProvider,
          signInWithRedirect,
          getRedirectResult,
@@ -20,6 +20,8 @@ import { getFirestore, collection, doc,
    🔧 BURAYA KENDİ CONFIG'İNİ YAPIŞTIR
    Firebase Console → ⚙️ Project Settings → General → Your apps → Config
 ───────────────────────────────────────────────────────────── */
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyB1AxvgT5wT_FUK4Wr4MGsheSBStb88kbs",
   authDomain: "printflow-511cf.firebaseapp.com",
