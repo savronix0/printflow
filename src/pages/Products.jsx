@@ -1,8 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAllProductions } from "../hooks/useProductions";
+import { useSales } from "../hooks/useSales";
 import { useAccessories } from "../hooks/useAccessories";
+import { useAuth } from "../context/AuthContext";
 import { useSettings } from "../hooks/useSettings";
+import { useProductAccessories, saveProductAccessoryDeductions } from "../hooks/useProductAccessories";
+import { useProductStocks } from "../hooks/useProductStocks";
 import {
   Package,
   ChevronDown,
@@ -12,9 +16,12 @@ import {
   Settings2,
   Plus,
   Minus,
+  Save,
 } from "lucide-react";
 
-function ProductCard({ productName, productions, accessories, settings }) {
+const normalizeProductName = (name) => (name || "İsimsiz").trim();
+
+function ProductCard({ productName, productions, accessories, deductions, onSaveAccessories, currentStock }) {
   const [expanded, setExpanded] = useState(false);
 
   const totalQty = productions.reduce((s, p) => s + (p.quantity || 1), 0);
@@ -33,6 +40,7 @@ function ProductCard({ productName, productions, accessories, settings }) {
 
   const autoCostPerUnit = baseUnitCost + electricityPerUnit + wearPerUnit + failurePerUnit;
 
+  const productDeductions = deductions[productName] || {};
   const [accessorySelections, setAccessorySelections] = useState(() => {
     try {
       const saved = localStorage.getItem(`printflow-product-acc-${productName}`);
@@ -41,6 +49,7 @@ function ProductCard({ productName, productions, accessories, settings }) {
       return [];
     }
   });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(`printflow-product-acc-${productName}`, JSON.stringify(accessorySelections));
@@ -83,6 +92,19 @@ function ProductCard({ productName, productions, accessories, settings }) {
     }
   };
 
+  const handleSaveAccessories = async () => {
+    const hasSelection = accessorySelections.some((s) => (s.qtyPerUnit || 0) > 0);
+    if (!hasSelection) return;
+    setSaving(true);
+    try {
+      await onSaveAccessories(productName, accessorySelections, totalQty, productDeductions);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const hasAccessorySelection = accessorySelections.some((s) => (s.qtyPerUnit || 0) > 0);
+
   return (
     <div className="glass rounded-2xl overflow-hidden">
       <button
@@ -96,7 +118,7 @@ function ProductCard({ productName, productions, accessories, settings }) {
           <div>
             <h3 className="font-medium text-white">{productName || "İsimsiz Ürün"}</h3>
             <p className="text-sm text-slate-500">
-              {totalQty} adet üretim
+              Stok: {currentStock ?? 0} adet · {totalQty} adet üretilmiş
             </p>
           </div>
         </div>
@@ -194,6 +216,17 @@ function ProductCard({ productName, productions, accessories, settings }) {
                 })}
               </div>
             )}
+            {hasAccessorySelection && (
+              <button
+                type="button"
+                onClick={handleSaveAccessories}
+                disabled={saving}
+                className="mt-3 flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 disabled:opacity-50 text-sm"
+              >
+                <Save className="w-4 h-4" />
+                {saving ? "Kaydediliyor..." : "Aksesuar stokunu düş"}
+              </button>
+            )}
           </div>
 
           <div className="pt-4 border-t border-white/5 flex justify-between items-center mt-4">
@@ -209,12 +242,20 @@ function ProductCard({ productName, productions, accessories, settings }) {
 }
 
 export function Products() {
+  const { user } = useAuth();
   const { productions, loading } = useAllProductions();
+  const { sales } = useSales();
   const { accessories } = useAccessories();
   const { settings } = useSettings();
+  const { deductions } = useProductAccessories();
+  const { productStocks } = useProductStocks();
+
+  const handleSaveAccessories = async (productName, selections, totalQty, previousDeductions) => {
+    await saveProductAccessoryDeductions(user.uid, productName, selections, totalQty, previousDeductions);
+  };
 
   const byProduct = productions.reduce((acc, p) => {
-    const name = p.productName || "İsimsiz";
+    const name = normalizeProductName(p.productName);
     if (!acc[name]) acc[name] = [];
     acc[name].push(p);
     return acc;
@@ -223,6 +264,16 @@ export function Products() {
   const productList = Object.entries(byProduct).sort(([a], [b]) =>
     a.localeCompare(b)
   );
+
+  const getLegacyComputedStock = (productName) => {
+    const produced = productions
+      .filter((p) => normalizeProductName(p.productName) === normalizeProductName(productName))
+      .reduce((sum, p) => sum + (p.quantity || 1), 0);
+    const sold = sales
+      .filter((s) => normalizeProductName(s.productName) === normalizeProductName(productName))
+      .reduce((sum, s) => sum + (s.quantity || 1), 0);
+    return Math.max(0, produced - sold);
+  };
 
   if (loading) {
     return (
@@ -253,7 +304,12 @@ export function Products() {
               productName={name}
               productions={prods}
               accessories={accessories}
-              settings={settings}
+              deductions={deductions}
+              onSaveAccessories={handleSaveAccessories}
+              currentStock={
+                productStocks?.[encodeURIComponent(normalizeProductName(name))]?.quantity ??
+                getLegacyComputedStock(name)
+              }
             />
           ))}
         </div>

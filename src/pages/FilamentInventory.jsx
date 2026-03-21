@@ -6,12 +6,13 @@ import {
   deleteFilament,
 } from "../hooks/useFilaments";
 import { useAuth } from "../context/AuthContext";
-import { Plus, Pencil, Trash2, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Package, Layers } from "lucide-react";
 
 export function FilamentInventory() {
   const { user } = useAuth();
   const { filaments, loading } = useFilaments();
   const [modalOpen, setModalOpen] = useState(false);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({
     colorName: "",
@@ -23,15 +24,25 @@ export function FilamentInventory() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const openAdd = () => {
+  const openAdd = (copyFrom = null) => {
     setEditingId(null);
-    setForm({
-      colorName: "",
-      hexCode: "#808080",
-      brand: "",
-      pricePerKg: "",
-      remainingGram: "",
-    });
+    if (copyFrom) {
+      setForm({
+        colorName: "",
+        hexCode: "#808080",
+        brand: copyFrom.brand || "",
+        pricePerKg: String(copyFrom.pricePerKg ?? ""),
+        remainingGram: "",
+      });
+    } else {
+      setForm({
+        colorName: "",
+        hexCode: "#808080",
+        brand: "",
+        pricePerKg: "",
+        remainingGram: "",
+      });
+    }
     setError("");
     setModalOpen(true);
   };
@@ -100,6 +111,53 @@ export function FilamentInventory() {
     }
   };
 
+  const [bulkForm, setBulkForm] = useState({ brand: "", pricePerKg: "", rows: [{ colorName: "", hexCode: "#808080", remainingGram: "" }] });
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+
+  const addBulkRow = () => {
+    setBulkForm((f) => ({ ...f, rows: [...f.rows, { colorName: "", hexCode: "#808080", remainingGram: "" }] }));
+  };
+
+  const removeBulkRow = (idx) => {
+    if (bulkForm.rows.length <= 1) return;
+    setBulkForm((f) => ({ ...f, rows: f.rows.filter((_, i) => i !== idx) }));
+  };
+
+  const updateBulkRow = (idx, field, value) => {
+    setBulkForm((f) => ({
+      ...f,
+      rows: f.rows.map((r, i) => (i === idx ? { ...r, [field]: value } : r)),
+    }));
+  };
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    const price = parseFloat(bulkForm.pricePerKg);
+    if (isNaN(price) || price < 0) {
+      alert("Kg fiyatı geçerli olmalıdır.");
+      return;
+    }
+    setBulkSubmitting(true);
+    try {
+      for (const row of bulkForm.rows) {
+        const grams = parseInt(row.remainingGram, 10) || 0;
+        if (row.colorName.trim() && grams >= 0) {
+          await addFilament(user.uid, {
+            colorName: row.colorName.trim(),
+            hexCode: row.hexCode || "#808080",
+            brand: bulkForm.brand.trim(),
+            pricePerKg: price,
+            remainingGram: grams,
+          });
+        }
+      }
+      setBulkModalOpen(false);
+      setBulkForm({ brand: "", pricePerKg: "", rows: [{ colorName: "", hexCode: "#808080", remainingGram: "" }] });
+    } finally {
+      setBulkSubmitting(false);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!confirm("Bu filament kaydını silmek istediğinize emin misiniz?"))
       return;
@@ -119,13 +177,22 @@ export function FilamentInventory() {
             Stok ekle, düzenle ve renk tanımla
           </p>
         </div>
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium hover:from-cyan-600 hover:to-blue-700 transition-all shrink-0"
-        >
-          <Plus className="w-5 h-5" />
-          Yeni Filament
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => openAdd()}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium hover:from-cyan-600 hover:to-blue-700 transition-all shrink-0"
+          >
+            <Plus className="w-5 h-5" />
+            Yeni Filament
+          </button>
+          <button
+            onClick={() => setBulkModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl glass hover:bg-white/10 text-white font-medium transition-all shrink-0"
+          >
+            <Layers className="w-5 h-5" />
+            Toplu Ekle
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -205,6 +272,30 @@ export function FilamentInventory() {
               {editingId ? "Filament Düzenle" : "Yeni Filament Ekle"}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {filaments.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Mevcut filamentten kopyala (marka & fiyat)
+                  </label>
+                  <select
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      if (id) {
+                        const f = filaments.find((x) => x.id === id);
+                        if (f) openAdd(f);
+                      }
+                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-800/90 border border-white/10 text-white"
+                  >
+                    <option value="">Seçin...</option>
+                    {filaments.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.colorName} ({f.brand}) — {(f.pricePerKg ?? 0).toFixed(2)} ₺/kg
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
                   Renk Adı
@@ -295,6 +386,129 @@ export function FilamentInventory() {
                   className="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium hover:from-cyan-600 hover:to-blue-700 disabled:opacity-50 transition-all"
                 >
                   {submitting ? "Kaydediliyor..." : editingId ? "Güncelle" : "Ekle"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Toplu Ekle Modal */}
+      {bulkModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+          onClick={() => setBulkModalOpen(false)}
+        >
+          <div
+            className="glass-strong rounded-2xl p-6 w-full max-w-lg my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Layers className="w-5 h-5" />
+              Toplu Filament Ekle
+            </h2>
+            <p className="text-slate-400 text-sm mb-4">
+              Aynı marka ve fiyattan birden fazla renk ekleyin. Marka ve kg fiyatını bir kez girin.
+            </p>
+            <form onSubmit={handleBulkSubmit} className="space-y-4">
+              {filaments.length > 0 && (
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Mevcut filamentten kopyala</label>
+                  <select
+                    onChange={(e) => {
+                      const f = filaments.find((x) => x.id === e.target.value);
+                      if (f) setBulkForm((bf) => ({ ...bf, brand: f.brand || "", pricePerKg: String(f.pricePerKg ?? "") }));
+                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-800/90 border border-white/10 text-white"
+                  >
+                    <option value="">Seçin...</option>
+                    {filaments.map((f) => (
+                      <option key={f.id} value={f.id}>{f.colorName} ({f.brand})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Marka</label>
+                  <input
+                    type="text"
+                    value={bulkForm.brand}
+                    onChange={(e) => setBulkForm({ ...bulkForm, brand: e.target.value })}
+                    placeholder="Prusament, eSun..."
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1">Kg Fiyatı (₺)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={bulkForm.pricePerKg}
+                    onChange={(e) => setBulkForm({ ...bulkForm, pricePerKg: e.target.value })}
+                    placeholder="200"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white"
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-sm text-slate-400">Renkler</label>
+                  <button type="button" onClick={addBulkRow} className="text-cyan-400 hover:text-cyan-300 text-sm">
+                    + Satır ekle
+                  </button>
+                </div>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {bulkForm.rows.map((row, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        value={row.hexCode}
+                        onChange={(e) => updateBulkRow(idx, "hexCode", e.target.value)}
+                        className="w-10 h-10 rounded-lg border border-white/10 cursor-pointer shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={row.colorName}
+                        onChange={(e) => updateBulkRow(idx, "colorName", e.target.value)}
+                        placeholder="Renk"
+                        className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        value={row.remainingGram}
+                        onChange={(e) => updateBulkRow(idx, "remainingGram", e.target.value)}
+                        placeholder="g"
+                        className="w-20 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeBulkRow(idx)}
+                        disabled={bulkForm.rows.length <= 1}
+                        className="p-2 rounded hover:bg-red-500/20 text-slate-400 hover:text-red-400 disabled:opacity-30"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setBulkModalOpen(false)}
+                  className="flex-1 py-3 rounded-xl border border-white/10 text-slate-300 hover:bg-white/5"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  disabled={bulkSubmitting}
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium disabled:opacity-50"
+                >
+                  {bulkSubmitting ? "Ekleniyor..." : `(${bulkForm.rows.length} filament) Ekle`}
                 </button>
               </div>
             </form>

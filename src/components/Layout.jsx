@@ -11,6 +11,7 @@ import {
   Boxes,
   Settings,
   Scissors,
+  TrendingUp,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -21,6 +22,7 @@ const navItems = [
   { to: "/products", icon: Boxes, label: "Ürünler" },
   { to: "/accessories", icon: Scissors, label: "Aksesuarlar" },
   { to: "/filaments", icon: Package, label: "Filament Envanteri" },
+  { to: "/sales", icon: TrendingUp, label: "Satışlar" },
   { to: "/settings", icon: Settings, label: "Ayarlar" },
 ];
 
@@ -64,6 +66,7 @@ export function Layout({ children }) {
             <NavLink
               key={to}
               to={to}
+              onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                   isActive

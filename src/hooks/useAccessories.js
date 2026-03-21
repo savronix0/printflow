@@ -5,6 +5,7 @@ import {
   push,
   update,
   remove,
+  get,
 } from "firebase/database";
 import { db } from "../lib/firebase";
 import { useAuth } from "../context/AuthContext";
@@ -57,4 +58,20 @@ export async function updateAccessory(uid, accId, data) {
 export async function deleteAccessory(uid, accId) {
   const ref_ = ref(db, `users/${uid}/accessories/${accId}`);
   await remove(ref_);
+}
+
+export async function deductAccessoryStock(uid, accId, amount) {
+  const ref_ = ref(db, `users/${uid}/accessories/${accId}`);
+  const snapshot = await get(ref_);
+  if (!snapshot.exists()) return;
+  const current = snapshot.val().stockCount ?? 0;
+  await update(ref_, { stockCount: Math.max(0, current - amount) });
+}
+
+export async function addAccessoryStock(uid, accId, amount) {
+  const ref_ = ref(db, `users/${uid}/accessories/${accId}`);
+  const snapshot = await get(ref_);
+  if (!snapshot.exists()) return;
+  const current = snapshot.val().stockCount ?? 0;
+  await update(ref_, { stockCount: current + amount });
 }

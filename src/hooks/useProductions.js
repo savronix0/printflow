@@ -9,6 +9,7 @@ import {
 } from "firebase/database";
 import { db } from "../lib/firebase";
 import { useAuth } from "../context/AuthContext";
+import { adjustProductStock } from "../lib/productStock";
 
 export function useProductions(limitCount = 10) {
   const { user } = useAuth();
@@ -136,6 +137,8 @@ export async function addProduction(uid, data) {
     }
   }
 
+  await adjustProductStock(uid, data.productName || "Ürün", data.quantity || 1);
+
   return newRef.key;
 }
 
@@ -204,9 +207,30 @@ export async function updateProduction(uid, productionId, data, previousData = n
   }
 
   await update(prodRef, { ...rest, filamentUsages: usages });
+
+  const prevName = previousData?.productName || "Ürün";
+  const prevQty = previousData?.quantity || 1;
+  const nextName = rest.productName || "Ürün";
+  const nextQty = rest.quantity || 1;
+
+  if (prevName === nextName) {
+    const diff = nextQty - prevQty;
+    if (diff !== 0) {
+      await adjustProductStock(uid, nextName, diff);
+    }
+  } else {
+    await adjustProductStock(uid, prevName, -prevQty);
+    await adjustProductStock(uid, nextName, nextQty);
+  }
 }
 
-export async function deleteProduction(uid, productionId, filamentUsages = []) {
+export async function deleteProduction(
+  uid,
+  productionId,
+  filamentUsages = [],
+  productName = "Ürün",
+  quantity = 1
+) {
   const prodRef = ref(db, `users/${uid}/productions/${productionId}`);
 
   for (const { filamentId, gramsUsed } of filamentUsages) {
@@ -219,5 +243,6 @@ export async function deleteProduction(uid, productionId, filamentUsages = []) {
     }
   }
 
+  await adjustProductStock(uid, productName, -(quantity || 1));
   await remove(prodRef);
 }

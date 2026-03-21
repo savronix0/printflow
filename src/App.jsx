@@ -10,6 +10,8 @@ import { Products } from "./pages/Products";
 import { AccessoriesPage } from "./pages/AccessoriesPage";
 import { FilamentInventory } from "./pages/FilamentInventory";
 import { SettingsPage } from "./pages/SettingsPage";
+import { SalesPage } from "./pages/SalesPage";
+import { CalculatorPage } from "./pages/CalculatorPage";
 
 function AuthenticatedApp() {
   return (
@@ -22,6 +24,7 @@ function AuthenticatedApp() {
         <Route path="accessories" element={<AccessoriesPage />} />
         <Route path="filaments" element={<FilamentInventory />} />
         <Route path="settings" element={<SettingsPage />} />
+        <Route path="sales" element={<SalesPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
@@ -33,6 +36,7 @@ function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/calculator" element={<CalculatorPage />} />
       <Route
         path="/auth"
         element={user ? <Navigate to="/" replace /> : <AuthPage />}
@@ -52,7 +56,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>

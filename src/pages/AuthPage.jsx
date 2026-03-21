@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Printer, Mail, Lock, User } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Printer, Mail, Lock, User, Calculator } from "lucide-react";
 
 export function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -145,6 +146,15 @@ export function AuthPage() {
             >
               {isLogin ? "Kayıt Ol" : "Giriş Yap"}
             </button>
+          </p>
+          <p className="mt-3 text-center">
+            <Link
+              to="/calculator"
+              className="inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 text-sm"
+            >
+              <Calculator className="w-4 h-4" />
+              Üye olmadan maliyet hesapla
+            </Link>
           </p>
         </div>
       </div>

@@ -149,7 +149,13 @@ export function Productions() {
   const handleDelete = async (p) => {
     if (!confirm(`"${p.productName}" üretimini silmek istediğinize emin misiniz?`)) return;
     try {
-      await deleteProduction(user.uid, p.id, p.filamentUsages || []);
+      await deleteProduction(
+        user.uid,
+        p.id,
+        p.filamentUsages || [],
+        p.productName || "Ürün",
+        p.quantity || 1
+      );
     } catch (err) {
       alert(err.message || "Silme başarısız.");
     }
